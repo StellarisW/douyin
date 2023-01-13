@@ -45,8 +45,8 @@ func {{.HandlerName}}(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		
 		log.Logger.Debug("send:", zap.Reflect("args", res))
 		
-		if res.Code != 0 {
-			if errx.IsSysErr(res.Code) {
+		if res.StatusCode != 0 {
+			if errx.IsSysErr(res.StatusCode) {
 				httpx.WriteJson(w, http.StatusInternalServerError, res)
 			} else {
 				httpx.WriteJson(w, http.StatusBadRequest, res)

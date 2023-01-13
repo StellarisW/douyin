@@ -7,7 +7,7 @@ type GetTokenByAuthReq struct {
 }
 
 type GetTokenByAuthResData struct {
-	Oauth2Token interface{} `json:"oauth2_token"`
+	Token interface{} `json:"token"`
 }
 
 type GetTokenByAuthRes struct {
@@ -16,22 +16,7 @@ type GetTokenByAuthRes struct {
 	Data GetTokenByAuthResData `json:"data"`
 }
 
-type GetTokenByRefreshTokenReq struct {
-	RefreshToken string `form:"refresh_token"`
-}
-
-type GetTokenByRefreshTokenResData struct {
-	Oauth2Token interface{} `json:"oauth2_token"`
-}
-
-type GetTokenByRefreshTokenRes struct {
-	Code uint32                        `json:"code"`
-	Msg  string                        `json:"msg"`
-	Data GetTokenByRefreshTokenResData `json:"data"`
-}
-
 type ReadTokenReq struct {
-	TokenType  string `form:"token_type"`
 	TokenValue string `form:"token_value"`
 }
 

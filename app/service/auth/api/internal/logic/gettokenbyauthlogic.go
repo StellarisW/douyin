@@ -32,7 +32,7 @@ func NewGetTokenByAuthLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 
 func (l *GetTokenByAuthLogic) GetTokenByAuth(req *types.GetTokenByAuthReq) (resp *types.GetTokenByAuthRes, err error) {
 	tokenGranter := token.GetTokenGranter()
-	oauth2Token, erx := tokenGranter.Grant(l.ctx, token.GrantByAuth, req.Authorization, req.Obj)
+	tokenPayload, erx := tokenGranter.Grant(l.ctx, token.GrantByAuth, req.Authorization, req.Obj)
 	if erx != nil {
 		log.Logger.Debug(consts.ErrGrantTokenByAuth, zap.Error(erx))
 		return &types.GetTokenByAuthRes{
@@ -52,6 +52,6 @@ func (l *GetTokenByAuthLogic) GetTokenByAuth(req *types.GetTokenByAuthReq) (resp
 	return &types.GetTokenByAuthRes{
 		Code: 0,
 		Msg:  "get token successfully",
-		Data: types.GetTokenByAuthResData{Oauth2Token: oauth2Token},
+		Data: types.GetTokenByAuthResData{Token: tokenPayload},
 	}, nil
 }

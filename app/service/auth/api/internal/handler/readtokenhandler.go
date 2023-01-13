@@ -6,14 +6,13 @@ import (
 	"douyin/app/common/log"
 	"douyin/app/common/model/response"
 	"douyin/app/service/auth/api/internal/consts"
-	"douyin/app/service/auth/internal/sys"
-	"go.uber.org/zap"
-	"net/http"
-
 	"douyin/app/service/auth/api/internal/logic"
 	"douyin/app/service/auth/api/internal/svc"
 	"douyin/app/service/auth/api/internal/types"
+	"douyin/app/service/auth/internal/sys"
 	"github.com/zeromicro/go-zero/rest/httpx"
+	"go.uber.org/zap"
+	"net/http"
 )
 
 func ReadTokenHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {

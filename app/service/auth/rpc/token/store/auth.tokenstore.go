@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const serviceName = "auth.rpc.auth.tokenstore"
+const serviceName = "auth.rpc.tokenstore"
 
 var c config.Config
 

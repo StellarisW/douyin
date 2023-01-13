@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const serviceName = "auth.rpc.auth.tokenenhancer"
+const serviceName = "auth.rpc.tokenenhancer"
 
 var c config.Config
 

@@ -6,7 +6,7 @@ type (
 		Obj           string `form:"obj"`
 	}
 	GetTokenByAuthResData {
-		Oauth2Token interface{} `json:"oauth2_token"`
+		Token interface{} `json:"token"`
 	}
 	GetTokenByAuthRes {
 		Code uint32                `json:"code"`
@@ -14,20 +14,7 @@ type (
 		Data GetTokenByAuthResData `json:"data"`
 	}
 
-	GetTokenByRefreshTokenReq {
-		RefreshToken string `form:"refresh_token"`
-	}
-	GetTokenByRefreshTokenResData {
-		Oauth2Token interface{} `json:"oauth2_token"`
-	}
-	GetTokenByRefreshTokenRes {
-		Code uint32                        `json:"code"`
-		Msg  string                        `json:"msg"`
-		Data GetTokenByRefreshTokenResData `json:"data"`
-	}
-
 	ReadTokenReq {
-		TokenType  string `form:"token_type"`
 		TokenValue string `form:"token_value"`
 	}
 	ReadTokenResData {
