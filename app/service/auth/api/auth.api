@@ -41,7 +41,7 @@ type (
 )
 
 @server(
-	prefix: api
+	prefix: douyin
 )
 service auth {
 	@doc(
