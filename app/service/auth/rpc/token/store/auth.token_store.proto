@@ -1,0 +1,46 @@
+syntax = "proto3";
+package auth.token_store;
+option go_package = "./pb";
+
+message Token{
+    string token_value=2;
+    int64 expires_at=3;
+}
+
+message StoreTokenReq{
+    string username=1;
+    Token token=2;
+}
+
+message StoreTokenRes{
+    uint32 code=1;
+    string msg=2;
+}
+
+message GetTokenReq{
+    string username=1;
+}
+
+message GetTokenRes{
+    uint32 code=1;
+    string msg=2;
+    Data data=3;
+    message Data{
+        Token token=1;
+    }
+}
+
+message RemoveTokenReq{
+    string username=1;
+}
+
+message RemoveTokenRes{
+    uint32 code=1;
+    string msg=2;
+}
+
+service TokenStore{
+    rpc StoreToken(StoreTokenReq) returns(StoreTokenRes);
+    rpc GetToken(GetTokenReq) returns(GetTokenRes);
+    rpc RemoveToken(RemoveTokenReq) returns(RemoveTokenRes);
+}

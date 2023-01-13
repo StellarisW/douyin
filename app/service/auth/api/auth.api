@@ -1,0 +1,55 @@
+syntax = "v1"
+
+type (
+	GetTokenByAuthReq {
+		Authorization string `header:"Authorization"`
+		Obj           string `form:"obj"`
+	}
+	GetTokenByAuthResData {
+		Oauth2Token interface{} `json:"oauth2_token"`
+	}
+	GetTokenByAuthRes {
+		Code uint32                `json:"code"`
+		Msg  string                `json:"msg"`
+		Data GetTokenByAuthResData `json:"data"`
+	}
+
+	GetTokenByRefreshTokenReq {
+		RefreshToken string `form:"refresh_token"`
+	}
+	GetTokenByRefreshTokenResData {
+		Oauth2Token interface{} `json:"oauth2_token"`
+	}
+	GetTokenByRefreshTokenRes {
+		Code uint32                        `json:"code"`
+		Msg  string                        `json:"msg"`
+		Data GetTokenByRefreshTokenResData `json:"data"`
+	}
+
+	ReadTokenReq {
+		TokenType  string `form:"token_type"`
+		TokenValue string `form:"token_value"`
+	}
+	ReadTokenResData {
+		Payload string `json:"payload"`
+	}
+	ReadTokenRes {
+		Code uint32           `json:"code"`
+		Msg  string           `json:"msg"`
+		Data ReadTokenResData `json:"data"`
+	}
+)
+
+@server(
+	prefix: api
+)
+service auth {
+	@doc(
+		summary: "token center"
+	)
+	@handler GetTokenByAuth
+	get /token/auth (GetTokenByAuthReq) returns (GetTokenByAuthRes)
+	
+	@handler ReadToken
+	post /token/read (ReadTokenReq) returns (ReadTokenRes)
+}

@@ -1,0 +1,41 @@
+syntax = "proto3";
+package auth.token_enhancer;
+option go_package = "./pb";
+
+message Token{
+    string token_value=2;
+    int64 expires_at=3;
+}
+
+// 生成令牌
+message GenerateTokenReq{
+    string username=1;
+    string client_id=2;
+}
+message GenerateTokenRes{
+    uint32 code=1;
+    string msg=2;
+    Data data=3;
+    message Data{
+        Token token=1;
+    }
+}
+
+// 读取令牌信息
+message ReadTokenReq{
+    string token_value=1;
+}
+message ReadTokenRes{
+    uint32 code=1;
+    string msg=2;
+    Data data=3;
+    message Data{
+        string payload=1;
+    }
+}
+
+service TokenEnhancer{
+    rpc GenerateToken(GenerateTokenReq) returns(GenerateTokenRes);
+    rpc ReadToken(ReadTokenReq) returns(ReadTokenRes);
+}
+
