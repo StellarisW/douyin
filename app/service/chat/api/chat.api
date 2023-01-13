@@ -1,0 +1,49 @@
+syntax = "v1"
+
+type (
+	Message {
+		Id         uint64 `json:"id"`
+		Content    string `json:"content"`
+		CreateTime string `json:"create_time"`
+	}
+)
+
+type (
+	SendMessageReq {
+		Token      string `form:"token"`
+		ToUserId   string `form:"to_user_id"`
+		ActionType string `form:"action_type"`
+		Content    string `form:"content"`
+	}
+	SendMessageRes {
+		StatusCode uint32 `json:"status_code"`
+		StatusMsg  string `json:"status_msg"`
+	}
+)
+
+type (
+	GetMessageListReq {
+		Token    string `form:"token"`
+		ToUserId string `form:"to_user_id"`
+	}
+	GetMessageListRes {
+		StatusCode  uint32     `json:"status_code"`
+		StatusMsg   string     `json:"status_msg"`
+		MessageList []*Message `json:"message_list"`
+	}
+)
+
+@server(
+	middleware: CORSMiddleware, JWTAuthMiddleware
+	prefix: douyin
+)
+service chat {
+	@doc(
+		summary: "chat services"
+	)
+	@handler SendMessage
+	post /message/action (SendMessageReq) returns (SendMessageRes)
+	
+	@handler GetMessageList
+	get /message/chat (GetMessageListReq) returns (GetMessageListRes)
+}

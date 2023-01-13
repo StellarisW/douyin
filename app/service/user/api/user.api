@@ -1,0 +1,136 @@
+syntax = "v1"
+
+type (
+	Profile {
+		Id            uint64 `json:"id"`
+		Name          string `json:"name"`
+		FollowCount   uint64 `json:"follow_count"`
+		FollowerCount uint64 `json:"follower_count"`
+		IsFollow      bool   `json:"is_follow"`
+	}
+)
+
+type (
+	RegisterReq {
+		Username string `form:"username"`
+		Password string `form:"password"`
+	}
+	RegisterRes {
+		StatusCode uint32 `json:"status_code"`
+		StatusMsg  string `json:"status_msg"`
+		UserId     uint64 `json:"user_id"`
+		Token      string `json:"token"`
+	}
+)
+
+type (
+	LoginReq {
+		Username string `form:"username"`
+		Password string `form:"password"`
+	}
+	LoginRes {
+		StatusCode uint32 `json:"status_code"`
+		StatusMsg  string `json:"status_msg"`
+		UserId     uint64 `json:"user_id"`
+		Token      string `json:"token"`
+	}
+)
+
+type (
+	ProfileReq {
+		UserId string `form:"user_id"`
+		Token  string `form:"token"`
+	}
+	ProfileRes {
+		StatusCode uint32  `json:"status_code"`
+		StatusMsg  string  `json:"status_msg"`
+		User       Profile `json:"user"`
+	}
+)
+
+type (
+	RelationReq {
+		Token      string `form:"token"`
+		ToUserId   string `form:"to_user_id"`
+		ActionType string `form:"action_type"`
+	}
+	RelationRes {
+		StatusCode uint32 `json:"status_code"`
+		StatusMsg  string `json:"status_msg"`
+	}
+)
+
+type (
+	GetFollowListReq {
+		UserId string `form:"user_id"`
+		Token  string `form:"token"`
+	}
+	GetFollowListRes {
+		StatusCode uint32     `json:"status_code"`
+		StatusMsg  string     `json:"status_msg"`
+		UserList   []*Profile `json:"user_list"`
+	}
+)
+
+type (
+	GetFollowerListReq {
+		UserId string `form:"user_id"`
+		Token  string `form:"token"`
+	}
+	GetFollowerListRes {
+		StatusCode uint32     `json:"status_code"`
+		StatusMsg  string     `json:"status_msg"`
+		UserList   []*Profile `json:"user_list"`
+	}
+)
+
+type (
+	GetFriendListReq {
+		UserId string `form:"user_id"`
+		Token  string `form:"token"`
+	}
+	GetFriendListRes {
+		StatusCode uint32     `json:"status_code"`
+		StatusMsg  string     `json:"status_msg"`
+		UserList   []*Profile `json:"user_list"`
+	}
+)
+
+@server(
+	middleware: CORSMiddleware
+	prefix: douyin
+)
+service user {
+	@doc(
+		summary: "user services"
+	)
+	@handler Register
+	post /user/register (RegisterReq) returns (RegisterRes)
+	
+	@handler Login
+	post /user/login (LoginReq) returns (LoginRes)
+}
+
+@server(
+	middleware: CORSMiddleware, JWTAuthMiddleware
+	prefix: douyin
+)
+service user {
+	@doc(
+		summary: "user services"
+	)
+	@handler Profile
+	get /user (ProfileReq) returns (ProfileRes)
+	
+	@handler Relation
+	post /relation/action (RelationReq) returns (RelationRes)
+	
+	@handler GetFollowList
+	get /relation/follow/list (GetFollowListReq) returns (GetFollowListRes)
+	
+	@handler GetFollowerList
+	get /relation/follower/list (GetFollowerListReq) returns (GetFollowerListRes)
+	
+	@handler GetFriendList
+	get /relation/friend/list (GetFriendListReq) returns (GetFriendListRes)
+}

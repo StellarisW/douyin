@@ -1,0 +1,154 @@
+syntax = "v1"
+
+type (
+	Profile {
+		Id            uint64 `json:"id"`
+		Name          string `json:"name"`
+		FollowCount   uint64 `json:"follow_count"`
+		FollowerCount uint64 `json:"follower_count"`
+		IsFollow      bool   `json:"is_follow"`
+	}
+
+	Video {
+		Id            uint64   `json:"id"`
+		Author        *Profile `json:"author"`
+		PlayUrl       string   `json:"play_url"`
+		CoverUrl      string   `json:"cover_url"`
+		FavoriteCount uint64   `json:"favorite_count"`
+		CommentCount  uint64   `json:"comment_count"`
+		IsFavorite    bool     `json:"is_favorite"`
+		Title         string   `json:"title"`
+	}
+
+	Comment {
+		Id         uint64   `json:"id"`
+		User       *Profile `json:"user"`
+		Content    string   `json:"content"`
+		CreateDate string   `json:"create_date"`
+	}
+)
+
+type (
+	FeedReq {
+		LastestTime string `form:"lastest_time"`
+		Token       string `form:"token"`
+	}
+	FeedRes {
+		StatusCode uint32   `json:"status_code"`
+		StatusMsg  string   `json:"status_msg"`
+		NextTime   int64    `json:"next_time"`
+		VideoList  []*Video `json:"video_list"`
+	}
+)
+
+type (
+	PublishReq {
+		Token string `form:"token"`
+		Title string `form:"title"`
+	}
+	PublishRes {
+		StatusCode uint32 `json:"status_code"`
+		StatusMsg  string `json:"status_msg"`
+	}
+)
+
+type (
+	GetPublishListReq {
+		Token  string `form:"token"`
+		UserId string `form:"user_id"`
+	}
+	GetPublishListRes {
+		StatusCode uint32   `json:"status_code"`
+		StatusMsg  string   `json:"status_msg"`
+		VideoList  []*Video `json:"video_list"`
+	}
+)
+
+type (
+	FavoriteReq {
+		Token      string `form:"token"`
+		VideoId    string `form:"video_id"`
+		ActionType string `form:"action_type"`
+	}
+	FavoriteRes {
+		StatusCode uint32 `json:"status_code"`
+		StatusMsg  string `json:"status_msg"`
+	}
+)
+
+type (
+	GetFavoriteListReq {
+		UserId string `form:"user_id"`
+		Token  string `form:"token"`
+	}
+	GetFavoriteListRes {
+		StatusCode uint32   `json:"status_code"`
+		StatusMsg  string   `json:"status_msg"`
+		VideoList  []*Video `json:"video_list"`
+	}
+)
+
+type (
+	CommentReq {
+		Token       string `form:"token"`
+		VideoId     string `form:"video_id"`
+		ActionType  string `form:"action_type"`
+		CommentText string `form:"comment_text"`
+		CommentId   string `form:"comment_id"`
+	}
+	CommentRes {
+		StatusCode uint32   `json:"status_code"`
+		StatusMsg  string   `json:"status_msg"`
+		Comment    *Comment `json:"comment"`
+	}
+)
+
+type (
+	GetCommentListReq {
+		Token   string `form:"token"`
+		VideoId string `form:"video_id"`
+	}
+	GetCommentListRes {
+		StatusCode uint32 `json:"status_code"`
+		StatusMsg  string `json:"status_msg"`
+	}
+)
+
+@server(
+	middleware: CORSMiddleware
+	prefix: douyin
+)
+service video {
+	@doc(
+		summary: "video services"
+	)
+	@handler Feed
+	get /feed (FeedReq) returns (FeedRes)
+}
+
+@server(
+	middleware: CORSMiddleware, JWTAuthMiddleware
+	prefix: douyin
+)
+service video {
+	@doc(
+		summary: "video services"
+	)
+	@handler Publish
+	post /publish/action (PublishReq) returns (PublishRes)
+	
+	@handler GetPublishList
+	get /publish/list (GetPublishListReq) returns (GetPublishListRes)
+	
+	@handler Favorite
+	post /favorite/action (FavoriteReq) returns (FavoriteRes)
+	
+	@handler GetFavoriteList
+	get /favorite/list (GetFavoriteListReq) returns (GetFavoriteListRes)
+	
+	@handler Comment
+	post /comment/action (CommentReq) returns (CommentRes)
+	
+	@handler GetCommentList
+	get /comment/list (GetCommentListReq) returns (GetCommentListRes)
+}

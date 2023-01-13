@@ -3,7 +3,7 @@ package utils
 import "strings"
 
 func GetServiceFullName(serviceName string) string {
-	output := "wecqupt-"
+	output := "douyin-"
 	for _, v := range serviceName {
 		if IsUpperCase(v) {
 			output += "-" + string(ToLower(v))
