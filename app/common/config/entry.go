@@ -3,15 +3,15 @@ package config
 import (
 	"douyin/app/common/config/internal/common"
 	"douyin/app/common/config/internal/database"
+	"douyin/app/common/config/internal/middleware"
 )
 
-var insDatabase = database.Group{Agollo: agolloClient}
-var insCommon = common.Group{Agollo: agolloClient}
-
 func Database() *database.Group {
-	return &insDatabase
+	return database.GetGroup()
 }
-
 func Common() *common.Group {
-	return &insCommon
+	return common.GetGroup()
+}
+func Middleware() *middleware.Group {
+	return middleware.GetGroup()
 }

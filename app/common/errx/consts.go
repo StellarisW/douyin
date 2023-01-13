@@ -37,7 +37,9 @@ const (
 const (
 	// 网络请求类
 
-	RequestRpcRes = "rpc res not ok"
+	RequestHttpSend       = "send http request failed"
+	RequestHttpStatusCode = "status code err"
+	RequestRpcRes         = "rpc res not ok"
 )
 
 const (

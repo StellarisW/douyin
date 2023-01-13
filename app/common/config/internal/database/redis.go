@@ -11,7 +11,7 @@ import (
 
 // GetRedisClusterClient 获取redis集群客户端实例
 func (g *Group) GetRedisClusterClient() (rdb *redis.ClusterClient, err error) {
-	if g.Agollo == nil {
+	if g.agollo == nil {
 		return nil, consts.ErrEmptyConfigClient
 	}
 
@@ -31,7 +31,7 @@ func (g *Group) GetRedisClusterClient() (rdb *redis.ClusterClient, err error) {
 
 // NewRedisClusterOptions 返回 *redis.ClusterOptions
 func (g *Group) NewRedisClusterOptions() (*redis.ClusterOptions, error) {
-	v, err := g.Agollo.GetViper(consts.MainNamespace)
+	v, err := g.agollo.GetViper(consts.MainNamespace)
 	if err != nil {
 		return nil, err
 	}

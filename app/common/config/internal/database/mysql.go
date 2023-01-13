@@ -10,7 +10,7 @@ import (
 
 // GetMysqlGormDB 获取mysqlDB实例
 func (g *Group) GetMysqlGormDB() (db *gorm.DB, err error) {
-	if g.Agollo == nil {
+	if g.agollo == nil {
 		return nil, consts.ErrEmptyConfigClient
 	}
 
@@ -36,7 +36,7 @@ func (g *Group) GetMysqlGormDB() (db *gorm.DB, err error) {
 
 // GetMysqlDsn 返回 mysql DSN
 func (g *Group) GetMysqlDsn() (dsn string, err error) {
-	v, err := g.Agollo.GetViper(consts.MainNamespace)
+	v, err := g.agollo.GetViper(consts.MainNamespace)
 	if err != nil {
 		return "", err
 	}

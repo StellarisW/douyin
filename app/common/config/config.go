@@ -14,8 +14,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var agolloClient *types.Agollo // 声明一个 Agollo 对象, 用于在当前包范围内的函数操作调用
-
 // InitClient 初始化 Agollo 客户端
 func InitClient() (err error) {
 	connConfig := types.AgolloConnConfig{
@@ -54,7 +52,7 @@ func InitClient() (err error) {
 	// 设置 配置监听功能
 	//client.AddChangeListener(&CustomChangeListener{})
 
-	agolloClient = types.NewAgolloClient(client, vipers)
+	types.AgolloClient = types.NewAgolloClient(client, vipers)
 
 	return nil
 }

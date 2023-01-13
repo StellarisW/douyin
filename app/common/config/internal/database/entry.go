@@ -5,5 +5,15 @@ import (
 )
 
 type Group struct {
-	Agollo *types.Agollo
+	agollo *types.Agollo
+}
+
+var insDatabase = &Group{}
+
+func GetGroup() *Group {
+	if insDatabase.agollo == nil {
+		insDatabase = &Group{agollo: types.AgolloClient}
+	}
+
+	return insDatabase
 }

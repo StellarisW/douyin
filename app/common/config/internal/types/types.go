@@ -19,6 +19,8 @@ type AgolloConnConfig struct {
 	Secret      string // apollo app secret
 }
 
+var AgolloClient *Agollo // 声明一个 Agollo 对象, 用于在当前包范围内的函数操作调用
+
 func NewAgolloClient(client agollo.Client, vipers map[string]*viper.Viper) *Agollo {
 	return &Agollo{
 		client: client,
