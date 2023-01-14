@@ -56,7 +56,7 @@ func CommentHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			} else {
 				httpx.WriteJson(w, http.StatusBadRequest, res)
 			}
-
+			return
 		}
 
 		httpx.WriteJson(w, http.StatusOK, res)
