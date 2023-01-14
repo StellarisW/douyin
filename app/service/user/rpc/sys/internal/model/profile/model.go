@@ -74,6 +74,7 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 			log.Logger.Error(errx.RedisGet, zap.Error(err))
 			return nil, errRedisGet
 		}
+	} else {
 		profile.IsFollow = true
 	}
 
