@@ -39,3 +39,43 @@ func (s *SysServer) Login(ctx context.Context, in *pb.LoginReq) (*pb.LoginRes, e
 	log.Logger.Debug("send:", zap.String("msg", res.String()))
 	return res, err
 }
+
+func (s *SysServer) GetProfile(ctx context.Context, in *pb.GetProfileReq) (*pb.GetProfileRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewGetProfileLogic(ctx, s.svcCtx)
+	res, err := l.GetProfile(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
+func (s *SysServer) Relation(ctx context.Context, in *pb.RelationReq) (*pb.RelationRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewRelationLogic(ctx, s.svcCtx)
+	res, err := l.Relation(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
+func (s *SysServer) GetFollowList(ctx context.Context, in *pb.GetFollowListReq) (*pb.GetFollowListRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewGetFollowListLogic(ctx, s.svcCtx)
+	res, err := l.GetFollowList(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
+func (s *SysServer) GetFollowerList(ctx context.Context, in *pb.GetFollowerListReq) (*pb.GetFollowerListRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewGetFollowerListLogic(ctx, s.svcCtx)
+	res, err := l.GetFollowerList(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
+func (s *SysServer) GetFriendList(ctx context.Context, in *pb.GetFriendListReq) (*pb.GetFriendListRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewGetFriendListLogic(ctx, s.svcCtx)
+	res, err := l.GetFriendList(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}

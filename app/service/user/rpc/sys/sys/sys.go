@@ -13,14 +13,31 @@ import (
 )
 
 type (
-	LoginReq    = pb.LoginReq
-	LoginRes    = pb.LoginRes
-	RegisterReq = pb.RegisterReq
-	RegisterRes = pb.RegisterRes
+	GetFollowListReq   = pb.GetFollowListReq
+	GetFollowListRes   = pb.GetFollowListRes
+	GetFollowerListReq = pb.GetFollowerListReq
+	GetFollowerListRes = pb.GetFollowerListRes
+	GetFriendListReq   = pb.GetFriendListReq
+	GetFriendListRes   = pb.GetFriendListRes
+	GetProfileReq      = pb.GetProfileReq
+	GetProfileRes      = pb.GetProfileRes
+	LoginReq           = pb.LoginReq
+	LoginRes           = pb.LoginRes
+	Profile            = pb.Profile
+	Profiles           = pb.Profiles
+	RegisterReq        = pb.RegisterReq
+	RegisterRes        = pb.RegisterRes
+	RelationReq        = pb.RelationReq
+	RelationRes        = pb.RelationRes
 
 	Sys interface {
 		Register(ctx context.Context, in *RegisterReq, opts ...grpc.CallOption) (*RegisterRes, error)
 		Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginRes, error)
+		GetProfile(ctx context.Context, in *GetProfileReq, opts ...grpc.CallOption) (*GetProfileRes, error)
+		Relation(ctx context.Context, in *RelationReq, opts ...grpc.CallOption) (*RelationRes, error)
+		GetFollowList(ctx context.Context, in *GetFollowListReq, opts ...grpc.CallOption) (*GetFollowListRes, error)
+		GetFollowerList(ctx context.Context, in *GetFollowerListReq, opts ...grpc.CallOption) (*GetFollowerListRes, error)
+		GetFriendList(ctx context.Context, in *GetFriendListReq, opts ...grpc.CallOption) (*GetFriendListRes, error)
 	}
 
 	defaultSys struct {
@@ -42,4 +59,29 @@ func (m *defaultSys) Register(ctx context.Context, in *RegisterReq, opts ...grpc
 func (m *defaultSys) Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginRes, error) {
 	client := pb.NewSysClient(m.cli.Conn())
 	return client.Login(ctx, in, opts...)
+}
+
+func (m *defaultSys) GetProfile(ctx context.Context, in *GetProfileReq, opts ...grpc.CallOption) (*GetProfileRes, error) {
+	client := pb.NewSysClient(m.cli.Conn())
+	return client.GetProfile(ctx, in, opts...)
+}
+
+func (m *defaultSys) Relation(ctx context.Context, in *RelationReq, opts ...grpc.CallOption) (*RelationRes, error) {
+	client := pb.NewSysClient(m.cli.Conn())
+	return client.Relation(ctx, in, opts...)
+}
+
+func (m *defaultSys) GetFollowList(ctx context.Context, in *GetFollowListReq, opts ...grpc.CallOption) (*GetFollowListRes, error) {
+	client := pb.NewSysClient(m.cli.Conn())
+	return client.GetFollowList(ctx, in, opts...)
+}
+
+func (m *defaultSys) GetFollowerList(ctx context.Context, in *GetFollowerListReq, opts ...grpc.CallOption) (*GetFollowerListRes, error) {
+	client := pb.NewSysClient(m.cli.Conn())
+	return client.GetFollowerList(ctx, in, opts...)
+}
+
+func (m *defaultSys) GetFriendList(ctx context.Context, in *GetFriendListReq, opts ...grpc.CallOption) (*GetFriendListRes, error) {
+	client := pb.NewSysClient(m.cli.Conn())
+	return client.GetFriendList(ctx, in, opts...)
 }

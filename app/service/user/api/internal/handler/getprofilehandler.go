@@ -17,9 +17,9 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-func ProfileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func GetProfileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.ProfileReq
+		var req types.GetProfileReq
 
 		if err := httpx.Parse(r, &req); err != nil {
 			log.Logger.Error(errx.ParseHttpRequest, zap.Error(err), zap.Reflect("request", r))
@@ -32,7 +32,7 @@ func ProfileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					douyin.Api,
 					sys.ServiceIdApi,
 					consts.ErrIdLogicProfile,
-					profile.ErrIdOprProfile,
+					profile.ErrIdOprGetProfile,
 					0,
 				),
 				err.Error(),
@@ -41,9 +41,9 @@ func ProfileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 		log.Logger.Debug("recv:", zap.Reflect("args", req))
 
-		l := logic.NewProfileLogic(r.Context(), svcCtx)
+		l := logic.NewGetProfileLogic(r.Context(), svcCtx)
 
-		res, err := l.Profile(&req)
+		res, err := l.GetProfile(&req)
 		if err != nil {
 			log.Logger.Error(errx.ProcessHttpLogic, zap.Error(err))
 		}

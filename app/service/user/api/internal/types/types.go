@@ -4,8 +4,8 @@ package types
 type Profile struct {
 	Id            int64  `json:"id"`
 	Name          string `json:"name"`
-	FollowCount   uint64 `json:"follow_count"`
-	FollowerCount uint64 `json:"follower_count"`
+	FollowCount   int64  `json:"follow_count"`
+	FollowerCount int64  `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow"`
 }
 
@@ -33,12 +33,12 @@ type LoginRes struct {
 	Token      string `json:"token,omitempty"`
 }
 
-type ProfileReq struct {
+type GetProfileReq struct {
 	UserId string `form:"user_id"`
 	Token  string `form:"token"`
 }
 
-type ProfileRes struct {
+type GetProfileRes struct {
 	StatusCode uint32  `json:"status_code"`
 	StatusMsg  string  `json:"status_msg"`
 	User       Profile `json:"user"`

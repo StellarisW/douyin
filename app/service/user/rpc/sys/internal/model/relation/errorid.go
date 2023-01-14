@@ -9,15 +9,16 @@ const (
 	ErrIdOprGetFriendList
 )
 
-// 通用操作
+// 通用错误
 
 const (
-	ErrIdParseInt = iota
+	ErrIdRedisAdd = iota
+	ErrIdRedisRem
+	ErrIdRedisRange
+	ErrIdRedisInter
+	ErrIdRedisGet
+	ErrIdMysqlGet
 	ErrIdCommon
-)
-
-const (
-	ErrParseInt = "parse int failed"
 )
 
 // Relation 操作

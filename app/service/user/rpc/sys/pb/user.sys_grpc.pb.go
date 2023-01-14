@@ -24,6 +24,11 @@ const _ = grpc.SupportPackageIsVersion7
 type SysClient interface {
 	Register(ctx context.Context, in *RegisterReq, opts ...grpc.CallOption) (*RegisterRes, error)
 	Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginRes, error)
+	GetProfile(ctx context.Context, in *GetProfileReq, opts ...grpc.CallOption) (*GetProfileRes, error)
+	Relation(ctx context.Context, in *RelationReq, opts ...grpc.CallOption) (*RelationRes, error)
+	GetFollowList(ctx context.Context, in *GetFollowListReq, opts ...grpc.CallOption) (*GetFollowListRes, error)
+	GetFollowerList(ctx context.Context, in *GetFollowerListReq, opts ...grpc.CallOption) (*GetFollowerListRes, error)
+	GetFriendList(ctx context.Context, in *GetFriendListReq, opts ...grpc.CallOption) (*GetFriendListRes, error)
 }
 
 type sysClient struct {
@@ -52,12 +57,62 @@ func (c *sysClient) Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOp
 	return out, nil
 }
 
+func (c *sysClient) GetProfile(ctx context.Context, in *GetProfileReq, opts ...grpc.CallOption) (*GetProfileRes, error) {
+	out := new(GetProfileRes)
+	err := c.cc.Invoke(ctx, "/user.sys.Sys/GetProfile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sysClient) Relation(ctx context.Context, in *RelationReq, opts ...grpc.CallOption) (*RelationRes, error) {
+	out := new(RelationRes)
+	err := c.cc.Invoke(ctx, "/user.sys.Sys/Relation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sysClient) GetFollowList(ctx context.Context, in *GetFollowListReq, opts ...grpc.CallOption) (*GetFollowListRes, error) {
+	out := new(GetFollowListRes)
+	err := c.cc.Invoke(ctx, "/user.sys.Sys/GetFollowList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sysClient) GetFollowerList(ctx context.Context, in *GetFollowerListReq, opts ...grpc.CallOption) (*GetFollowerListRes, error) {
+	out := new(GetFollowerListRes)
+	err := c.cc.Invoke(ctx, "/user.sys.Sys/GetFollowerList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sysClient) GetFriendList(ctx context.Context, in *GetFriendListReq, opts ...grpc.CallOption) (*GetFriendListRes, error) {
+	out := new(GetFriendListRes)
+	err := c.cc.Invoke(ctx, "/user.sys.Sys/GetFriendList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SysServer is the server API for Sys service.
 // All implementations must embed UnimplementedSysServer
 // for forward compatibility
 type SysServer interface {
 	Register(context.Context, *RegisterReq) (*RegisterRes, error)
 	Login(context.Context, *LoginReq) (*LoginRes, error)
+	GetProfile(context.Context, *GetProfileReq) (*GetProfileRes, error)
+	Relation(context.Context, *RelationReq) (*RelationRes, error)
+	GetFollowList(context.Context, *GetFollowListReq) (*GetFollowListRes, error)
+	GetFollowerList(context.Context, *GetFollowerListReq) (*GetFollowerListRes, error)
+	GetFriendList(context.Context, *GetFriendListReq) (*GetFriendListRes, error)
 	mustEmbedUnimplementedSysServer()
 }
 
@@ -70,6 +125,21 @@ func (UnimplementedSysServer) Register(context.Context, *RegisterReq) (*Register
 }
 func (UnimplementedSysServer) Login(context.Context, *LoginReq) (*LoginRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedSysServer) GetProfile(context.Context, *GetProfileReq) (*GetProfileRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfile not implemented")
+}
+func (UnimplementedSysServer) Relation(context.Context, *RelationReq) (*RelationRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Relation not implemented")
+}
+func (UnimplementedSysServer) GetFollowList(context.Context, *GetFollowListReq) (*GetFollowListRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFollowList not implemented")
+}
+func (UnimplementedSysServer) GetFollowerList(context.Context, *GetFollowerListReq) (*GetFollowerListRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFollowerList not implemented")
+}
+func (UnimplementedSysServer) GetFriendList(context.Context, *GetFriendListReq) (*GetFriendListRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFriendList not implemented")
 }
 func (UnimplementedSysServer) mustEmbedUnimplementedSysServer() {}
 
@@ -120,6 +190,96 @@ func _Sys_Login_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Sys_GetProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfileReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SysServer).GetProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.sys.Sys/GetProfile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SysServer).GetProfile(ctx, req.(*GetProfileReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Sys_Relation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RelationReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SysServer).Relation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.sys.Sys/Relation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SysServer).Relation(ctx, req.(*RelationReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Sys_GetFollowList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFollowListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SysServer).GetFollowList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.sys.Sys/GetFollowList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SysServer).GetFollowList(ctx, req.(*GetFollowListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Sys_GetFollowerList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFollowerListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SysServer).GetFollowerList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.sys.Sys/GetFollowerList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SysServer).GetFollowerList(ctx, req.(*GetFollowerListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Sys_GetFriendList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFriendListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SysServer).GetFriendList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.sys.Sys/GetFriendList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SysServer).GetFriendList(ctx, req.(*GetFriendListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Sys_ServiceDesc is the grpc.ServiceDesc for Sys service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +294,26 @@ var Sys_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _Sys_Login_Handler,
+		},
+		{
+			MethodName: "GetProfile",
+			Handler:    _Sys_GetProfile_Handler,
+		},
+		{
+			MethodName: "Relation",
+			Handler:    _Sys_Relation_Handler,
+		},
+		{
+			MethodName: "GetFollowList",
+			Handler:    _Sys_GetFollowList_Handler,
+		},
+		{
+			MethodName: "GetFollowerList",
+			Handler:    _Sys_GetFollowerList_Handler,
+		},
+		{
+			MethodName: "GetFriendList",
+			Handler:    _Sys_GetFriendList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

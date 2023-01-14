@@ -5,6 +5,8 @@ import (
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
 	"douyin/app/service/user/rpc/sys/internal/config"
+	"douyin/app/service/user/rpc/sys/internal/model/profile"
+	"douyin/app/service/user/rpc/sys/internal/model/relation"
 	"douyin/app/service/user/rpc/sys/internal/model/sign"
 	"go.uber.org/zap"
 )
@@ -12,7 +14,9 @@ import (
 type ServiceContext struct {
 	Config config.Config
 
-	SignModel sign.Model
+	SignModel     sign.Model
+	ProfileModel  profile.Model
+	RelationModel relation.Model
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -42,6 +46,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		SignModel: sign.NewModel(
 			authViper,
 			idGenerator,
+			db,
+			rdb,
+		),
+		ProfileModel: profile.NewModel(
+			db,
+			rdb,
+		),
+		RelationModel: relation.NewModel(
 			db,
 			rdb,
 		),

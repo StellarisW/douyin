@@ -6,5 +6,4 @@ const (
 	ErrIdLogicSign = iota
 	ErrIdLogicProfile
 	ErrIdLogicRelation
-	ErrIdLogicFriend
 )

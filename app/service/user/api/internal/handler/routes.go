@@ -36,7 +36,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				{
 					Method:  http.MethodGet,
 					Path:    "/user",
-					Handler: ProfileHandler(serverCtx),
+					Handler: GetProfileHandler(serverCtx),
 				},
 				{
 					Method:  http.MethodPost,

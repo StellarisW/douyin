@@ -6,7 +6,7 @@ import (
 	"douyin/app/common/log"
 	"douyin/app/common/model/response"
 	"douyin/app/service/user/api/internal/consts"
-	"douyin/app/service/user/api/internal/consts/friend"
+	"douyin/app/service/user/api/internal/consts/relation"
 	"douyin/app/service/user/internal/sys"
 	"go.uber.org/zap"
 	"net/http"
@@ -31,8 +31,8 @@ func GetFriendListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					sys.SysId,
 					douyin.Api,
 					sys.ServiceIdApi,
-					consts.ErrIdLogicFriend,
-					friend.ErrIdOprGetFriendList,
+					consts.ErrIdLogicRelation,
+					relation.ErrIdOprGetFriendList,
 					0,
 				),
 				err.Error(),

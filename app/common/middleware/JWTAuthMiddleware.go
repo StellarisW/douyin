@@ -90,7 +90,7 @@ func (m *JWTAuthMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
 		scope := tokenPayloadJson.Get("scope").String()
 
 		// 设置上下文
-		r = r.WithContext(context.WithValue(r.Context(), KeyCquptId, sub))
+		r = r.WithContext(context.WithValue(r.Context(), KeyUserId, sub))
 		r = r.WithContext(context.WithValue(r.Context(), KeyScope, scope))
 
 		next(w, r)

@@ -33,6 +33,6 @@ const (
 type ctxKey int
 
 const (
-	KeyCquptId ctxKey = iota
+	KeyUserId ctxKey = iota
 	KeyScope
 )
