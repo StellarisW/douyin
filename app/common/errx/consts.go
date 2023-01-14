@@ -16,6 +16,9 @@ const (
 	InitAgolloClient = "initialize Apollo Client failed."
 	InitMysql        = "initialize mysql failed"
 	InitRedis        = "initialize redis failed"
+
+	GetViper       = "get viper failed"
+	GetIdGenerator = "get idGenerator failed"
 )
 
 const (
@@ -23,6 +26,16 @@ const (
 
 	ParseHttpRequest = "parse http request failed"
 	ProcessHttpLogic = "process logic failed"
+)
+
+const (
+	// Mysql类
+
+	MysqlExec   = "exec sql failed"
+	MysqlGet    = "query mysql record failed"
+	MysqlInsert = "insert mysql record failed"
+	MysqlUpdate = "update mysql record failed"
+	MysqlDelete = "delete mysql record failed"
 )
 
 const (

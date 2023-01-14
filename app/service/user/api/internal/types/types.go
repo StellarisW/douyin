@@ -2,7 +2,7 @@
 package types
 
 type Profile struct {
-	Id            uint64 `json:"id"`
+	Id            int64  `json:"id"`
 	Name          string `json:"name"`
 	FollowCount   uint64 `json:"follow_count"`
 	FollowerCount uint64 `json:"follower_count"`
@@ -17,8 +17,8 @@ type RegisterReq struct {
 type RegisterRes struct {
 	StatusCode uint32 `json:"status_code"`
 	StatusMsg  string `json:"status_msg"`
-	UserId     uint64 `json:"user_id"`
-	Token      string `json:"token"`
+	UserId     int64  `json:"user_id,omitempty"`
+	Token      string `json:"token,omitempty"`
 }
 
 type LoginReq struct {
@@ -29,8 +29,8 @@ type LoginReq struct {
 type LoginRes struct {
 	StatusCode uint32 `json:"status_code"`
 	StatusMsg  string `json:"status_msg"`
-	UserId     uint64 `json:"user_id"`
-	Token      string `json:"token"`
+	UserId     int64  `json:"user_id,omitempty"`
+	Token      string `json:"token,omitempty"`
 }
 
 type ProfileReq struct {

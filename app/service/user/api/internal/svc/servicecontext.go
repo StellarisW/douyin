@@ -4,7 +4,10 @@ import (
 	apollo "douyin/app/common/config"
 	"douyin/app/common/log"
 	"douyin/app/service/user/api/internal/config"
+	"douyin/app/service/user/rpc/sys/sys"
+	"github.com/dlclark/regexp2"
 	"github.com/zeromicro/go-zero/rest"
+	"github.com/zeromicro/go-zero/zrpc"
 	"go.uber.org/zap"
 )
 
@@ -13,7 +16,15 @@ type ServiceContext struct {
 
 	CORSMiddleware    rest.Middleware
 	JWTAuthMiddleware rest.Middleware
-	CasAuthMiddleware rest.Middleware
+
+	SysRpcClient sys.Sys
+
+	Regexp *Regexp
+}
+
+type Regexp struct {
+	UsernameReg *regexp2.Regexp
+	PasswordReg *regexp2.Regexp
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -27,10 +38,22 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		log.Logger.Fatal("initialize JWTAuthMiddleware failed.", zap.Error(err))
 	}
 
+	// 4到32位(字母,数字,下划线,减号)
+	usernameReg := regexp2.MustCompile(`^[a-zA-Z0-9_-]{4,32}$`, regexp2.None)
+	// 6-32位(包括至少1个大写字母,1个小写字母,1个数字)
+	passwordRes := regexp2.MustCompile(`^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{6,32}$`, regexp2.None)
+
 	return &ServiceContext{
 		Config: c,
 
 		CORSMiddleware:    corsMiddleware.Handle,
 		JWTAuthMiddleware: JWTAuthMiddleware.Handle,
+
+		SysRpcClient: sys.NewSys(zrpc.MustNewClient(c.SysRpcClientConf)),
+
+		Regexp: &Regexp{
+			UsernameReg: usernameReg,
+			PasswordReg: passwordRes,
+		},
 	}
 }

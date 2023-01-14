@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/apolloconfig/agollo/v4 v4.3.0
+	github.com/dlclark/regexp2 v1.8.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/imroc/req/v3 v3.29.0
 	github.com/lestrrat-go/jwx/v2 v2.0.8
@@ -12,9 +13,11 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/viper v1.14.0
 	github.com/tidwall/gjson v1.14.4
+	github.com/yitter/idgenerator-go v1.3.2
 	github.com/zeromicro/go-zero v1.4.3
 	github.com/zeromicro/zero-contrib/zrpc/registry/consul v0.0.0-20230105125244-9279708d0fa6
 	go.uber.org/zap v1.24.0
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/mysql v1.4.5
@@ -116,7 +119,6 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/automaxprocs v1.5.1 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect

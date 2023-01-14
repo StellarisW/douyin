@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package user.sys;
+
+option go_package = "./pb";
+
+message RegisterReq {
+    string username = 1;
+    string password = 2;
+}
+message RegisterRes {
+    uint32 status_code = 1;
+    string status_msg = 2;
+    int64 user_id = 3;
+    string token = 4;
+}
+
+message LoginReq {
+    string username = 1;
+    string password = 2;
+}
+message LoginRes {
+    uint32 status_code = 1;
+    string status_msg = 2;
+    int64 user_id = 3;
+    string token = 4;
+}
+
+service Sys {
+    rpc Register (RegisterReq) returns (RegisterRes);
+    rpc Login (LoginReq) returns (LoginRes);
+}

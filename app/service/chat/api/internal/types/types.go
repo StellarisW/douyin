@@ -2,7 +2,7 @@
 package types
 
 type Message struct {
-	Id         uint64 `json:"id"`
+	Id         int64  `json:"id"`
 	Content    string `json:"content"`
 	CreateTime string `json:"create_time"`
 }

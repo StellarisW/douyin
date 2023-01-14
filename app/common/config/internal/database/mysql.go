@@ -42,11 +42,11 @@ func (g *Group) GetMysqlDsn() (dsn string, err error) {
 	}
 
 	// 拼接dsn字符串
-	dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Asia%%2FShanghai",
-		v.GetString("Database.Mysql.Address"),         // 数据库用户名
-		v.GetString("Database.Mysql.Port"),            // 数据库密码
-		v.GetString("Database.Mysql.Username"),        // 数据库地址
-		v.GetString("Database.Mysql.Password"),        // 数据库端口
+	dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Asia%%2FShanghai&tls=true",
+		v.GetString("Database.Mysql.Username"),        // 数据库用户名
+		v.GetString("Database.Mysql.Password"),        // 数据库密码
+		v.GetString("Database.Mysql.Address"),         // 数据库地址
+		v.GetString("Database.Mysql.port"),            // 数据库端口
 		v.GetString("Database.Mysql.DatabaseName"),    // mysql 的数据库名字
 		v.GetString("Database.Mysql.DatabaseCharset"), // mysql 的数据库使用的字符集
 	)

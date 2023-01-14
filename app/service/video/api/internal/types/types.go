@@ -2,7 +2,7 @@
 package types
 
 type Profile struct {
-	Id            uint64 `json:"id"`
+	Id            int64  `json:"id"`
 	Name          string `json:"name"`
 	FollowCount   uint64 `json:"follow_count"`
 	FollowerCount uint64 `json:"follower_count"`
@@ -10,7 +10,7 @@ type Profile struct {
 }
 
 type Video struct {
-	Id            uint64   `json:"id"`
+	Id            int64    `json:"id"`
 	Author        *Profile `json:"author"`
 	PlayUrl       string   `json:"play_url"`
 	CoverUrl      string   `json:"cover_url"`
@@ -21,7 +21,7 @@ type Video struct {
 }
 
 type Comment struct {
-	Id         uint64   `json:"id"`
+	Id         int64    `json:"id"`
 	User       *Profile `json:"user"`
 	Content    string   `json:"content"`
 	CreateDate string   `json:"create_date"`
