@@ -1,21 +1,41 @@
 package svc
 
 import (
+	apollo "douyin/app/common/config"
+	"douyin/app/common/log"
 	"douyin/app/service/video/api/internal/config"
-	"douyin/app/service/video/api/internal/middleware"
+	"douyin/app/service/video/rpc/sys/sys"
 	"github.com/zeromicro/go-zero/rest"
+	"github.com/zeromicro/go-zero/zrpc"
+	"go.uber.org/zap"
 )
 
 type ServiceContext struct {
-	Config            config.Config
+	Config config.Config
+
 	JWTAuthMiddleware rest.Middleware
 	CORSMiddleware    rest.Middleware
+
+	SysRpcClient sys.Sys
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
+	corsMiddleware, err := apollo.Middleware().NewCORSMiddleware()
+	if err != nil {
+		log.Logger.Fatal("initialize corsMiddleware failed.", zap.Error(err))
+	}
+
+	JWTAuthMiddleware, err := apollo.Middleware().NewJWTAuthMiddleware()
+	if err != nil {
+		log.Logger.Fatal("initialize JWTAuthMiddleware failed.", zap.Error(err))
+	}
+
 	return &ServiceContext{
-		Config:            c,
-		JWTAuthMiddleware: middleware.NewJWTAuthMiddleware().Handle,
-		CORSMiddleware:    middleware.NewCORSMiddleware().Handle,
+		Config: c,
+
+		CORSMiddleware:    corsMiddleware.Handle,
+		JWTAuthMiddleware: JWTAuthMiddleware.Handle,
+
+		SysRpcClient: sys.NewSys(zrpc.MustNewClient(c.SysRpcClientConf)),
 	}
 }

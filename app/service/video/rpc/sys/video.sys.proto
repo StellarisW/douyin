@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package video.sys;
+
+option go_package = "./pb";
+
+message Profile{
+    int64 id=1;
+    string name=2;
+    int64 follow_count=3;
+    int64 follower_count=4;
+    bool is_follow=5;
+}
+message Video{
+    int64 id=1;
+    Profile user=2;
+    string play_url=3;
+    string cover_url=4;
+    int64 favorite_count=5;
+    int64 comment_count=6;
+    bool is_favorite=7;
+    string title=8;
+}
+message Comment{
+    int64 id=1;
+    Profile user=2;
+    string content=3;
+    string create_date=4;
+}
+
+
+message PublishReq{
+    int64 user_id=1;
+    string title=2;
+    bytes data=3;
+}
+message PublishRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+}
+
+message GetPublishListReq{
+    int64 src_user_id=1;
+    int64 dst_user_id=2;
+}
+message GetPublishListRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    repeated Video videos = 3;
+}
+
+message FeedReq{
+    int64 latest_time=1;
+    int64 user_id=2;
+}
+message FeedRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    repeated Video videos = 3;
+    int64 next_time=4;
+}
+
+message FavoriteReq{
+    int64 user_id=1;
+    int64 video_id=2;
+    uint32 action_type=3;
+}
+message FavoriteRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+}
+
+message GetFavoriteListReq{
+    int64 src_user_id=1;
+    int64 dst_user_id=2;
+}
+message GetFavoriteListRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    repeated Video videos = 3;
+}
+
+message CommentReq{
+    int64 user_id=1;
+    int64 video_id=2;
+    uint32 action_type=3;
+    string comment_text=4;
+    int64 comment_id=5;
+}
+message CommentRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    Comment comment = 3;
+}
+
+message GetCommentListReq{
+    int64 user_id=1;
+    int64 video_id=2;
+}
+message GetCommentListRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    repeated Comment comments = 3;
+}
+
+service Sys {
+    rpc Publish (PublishReq) returns (PublishRes);
+    rpc GetPublishList (GetPublishListReq) returns (GetPublishListRes);
+    rpc Feed (FeedReq) returns (FeedRes);
+    rpc Favorite (FavoriteReq) returns (FavoriteRes);
+    rpc GetFavoriteList (GetFavoriteListReq) returns (GetFavoriteListRes);
+    rpc Comment (CommentReq) returns (CommentRes);
+    rpc GetCommentList (GetCommentListReq) returns (GetCommentListRes);
+}

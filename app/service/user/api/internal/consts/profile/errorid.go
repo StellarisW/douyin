@@ -9,7 +9,7 @@ const (
 // 通用操作
 
 const (
-	ErrIdParseInt = iota
+	ErrIdParseInt = iota + 1
 	ErrIdCommon
 )
 

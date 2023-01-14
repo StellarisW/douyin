@@ -16,6 +16,7 @@ const (
 	InitAgolloClient = "initialize Apollo Client failed."
 	InitMysql        = "initialize mysql failed"
 	InitRedis        = "initialize redis failed"
+	InitMinio        = "initialize minio client failed"
 
 	GetViper       = "get viper failed"
 	GetIdGenerator = "get idGenerator failed"
@@ -49,6 +50,8 @@ const (
 	RedisRem   = "remove redis set member failed"
 	RedisRange = "get redis set members in range failed"
 	RedisInter = "get redis set inter members failed"
+	RedisIncr  = "incr redis key failed"
+	RedisDecr  = "decr redis key failed"
 )
 
 const (
@@ -60,10 +63,19 @@ const (
 )
 
 const (
+
+	// Minio
+
+	MinioPut    = "minio client put object failed"
+	MinioRemove = "minio client remove object failed"
+)
+
+const (
 	// bytes类(序列化,解析等)
 
 	UnmarshalServiceConfig = "unmarshal viper key into service config failed"
 
 	JsonUnmarshal = "unmarshal json failed"
 	JsonMarshal   = "marshal json failed"
+	ReadBytes     = "read bytes failed"
 )

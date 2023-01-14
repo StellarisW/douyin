@@ -30,3 +30,8 @@ const (
 	SysNameVideo      = "video"
 	SysNameChat       = "chat"
 )
+
+const (
+	MinioDomain = "https://api.minio.stellaris.wang"
+	MinioBucket = "douyin"
+)

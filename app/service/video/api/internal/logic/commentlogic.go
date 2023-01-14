@@ -2,6 +2,14 @@ package logic
 
 import (
 	"context"
+	"douyin/app/common/douyin"
+	"douyin/app/common/errx"
+	"douyin/app/common/middleware"
+	"douyin/app/service/video/api/internal/consts"
+	"douyin/app/service/video/api/internal/consts/crud"
+	"douyin/app/service/video/internal/sys"
+	"douyin/app/service/video/rpc/sys/pb"
+	"strconv"
 
 	"douyin/app/service/video/api/internal/svc"
 	"douyin/app/service/video/api/internal/types"
@@ -24,7 +32,108 @@ func NewCommentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CommentLo
 }
 
 func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, err error) {
-	// todo: add your logic here and delete this line
+	if req.ActionType != "1" && req.ActionType != "2" {
+		return &types.CommentRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicCrud,
+				crud.ErrIdOprComment,
+				crud.ErrIdInvalidActionType,
+			),
+			StatusMsg: crud.ErrInvalidActionType,
+		}, nil
+	}
 
-	return
+	userId, err := strconv.ParseInt(l.ctx.Value(middleware.KeyUserId).(string), 10, 64)
+	if err != nil {
+		return &types.CommentRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicCrud,
+				crud.ErrIdOprComment,
+				crud.ErrIdParseInt,
+			),
+			StatusMsg: crud.ErrParseInt,
+		}, nil
+	}
+
+	actionType, err := strconv.ParseUint(req.ActionType, 10, 32)
+	if err != nil {
+		return &types.CommentRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicCrud,
+				crud.ErrIdOprComment,
+				crud.ErrIdParseInt,
+			),
+			StatusMsg: crud.ErrParseInt,
+		}, nil
+	}
+
+	var videoId, commentId int64
+
+	switch actionType {
+	case 1:
+		videoId, err = strconv.ParseInt(req.VideoId, 10, 64)
+		if err != nil {
+			return &types.CommentRes{
+				StatusCode: errx.Encode(
+					errx.Logic,
+					sys.SysId,
+					douyin.Api,
+					sys.ServiceIdApi,
+					consts.ErrIdLogicCrud,
+					crud.ErrIdOprComment,
+					crud.ErrIdParseInt,
+				),
+				StatusMsg: crud.ErrParseInt,
+			}, nil
+		}
+
+	case 2:
+
+		commentId, err = strconv.ParseInt(req.CommentId, 10, 64)
+		if err != nil {
+			return &types.CommentRes{
+				StatusCode: errx.Encode(
+					errx.Logic,
+					sys.SysId,
+					douyin.Api,
+					sys.ServiceIdApi,
+					consts.ErrIdLogicCrud,
+					crud.ErrIdOprComment,
+					crud.ErrIdParseInt,
+				),
+				StatusMsg: crud.ErrParseInt,
+			}, nil
+		}
+	}
+
+	rpcRes, _ := l.svcCtx.SysRpcClient.Comment(l.ctx, &pb.CommentReq{
+		UserId:      userId,
+		VideoId:     videoId,
+		ActionType:  uint32(actionType),
+		CommentText: req.CommentText,
+		CommentId:   commentId,
+	})
+	if rpcRes.StatusCode != 0 {
+		return &types.CommentRes{
+			StatusCode: rpcRes.StatusCode,
+			StatusMsg:  rpcRes.StatusMsg,
+		}, nil
+	}
+
+	return &types.CommentRes{
+		StatusCode: 0,
+		StatusMsg:  "comment successfully",
+	}, nil
 }

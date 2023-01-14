@@ -6,7 +6,7 @@ import (
 	"douyin/app/common/log"
 	"douyin/app/common/model/response"
 	"douyin/app/service/video/api/internal/consts"
-	"douyin/app/service/video/api/internal/consts/favorite"
+	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
 	"go.uber.org/zap"
 	"net/http"
@@ -31,8 +31,8 @@ func FavoriteHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					sys.SysId,
 					douyin.Api,
 					sys.ServiceIdApi,
-					consts.ErrIdLogicFavorite,
-					favorite.ErrIdOprFavorite,
+					consts.ErrIdLogicCrud,
+					crud.ErrIdOprFavorite,
 					0,
 				),
 				err.Error(),

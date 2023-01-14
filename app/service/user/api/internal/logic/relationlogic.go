@@ -79,7 +79,7 @@ func (l *RelationLogic) Relation(req *types.RelationReq) (resp *types.RelationRe
 		}, nil
 	}
 
-	actionType, err := strconv.ParseUint(req.ToUserId, 10, 32)
+	actionType, err := strconv.ParseUint(req.ActionType, 10, 32)
 	if err != nil {
 		return &types.RelationRes{
 			StatusCode: errx.Encode(

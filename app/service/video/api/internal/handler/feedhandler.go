@@ -6,7 +6,7 @@ import (
 	"douyin/app/common/log"
 	"douyin/app/common/model/response"
 	"douyin/app/service/video/api/internal/consts"
-	"douyin/app/service/video/api/internal/consts/video"
+	"douyin/app/service/video/api/internal/consts/info"
 	"douyin/app/service/video/internal/sys"
 	"go.uber.org/zap"
 	"net/http"
@@ -31,8 +31,8 @@ func FeedHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					sys.SysId,
 					douyin.Api,
 					sys.ServiceIdApi,
-					consts.ErrIdLogicVideo,
-					video.ErrIdOprFeed,
+					consts.ErrIdLogicInfo,
+					info.ErrIdOprFeed,
 					0,
 				),
 				err.Error(),

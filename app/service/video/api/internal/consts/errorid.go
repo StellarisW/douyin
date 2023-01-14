@@ -1,7 +1,6 @@
 package consts
 
 const (
-	ErrIdLogicVideo = iota
-	ErrIdLogicFavorite
-	ErrIdLogicComment
+	ErrIdLogicCrud = iota
+	ErrIdLogicInfo
 )

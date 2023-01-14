@@ -9,7 +9,6 @@ const (
 
 	serviceIdCORS = iota - 1
 	serviceIdJWT
-	ServiceIdCas
 )
 
 // JWT 中间件

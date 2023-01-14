@@ -6,10 +6,12 @@ import (
 	"douyin/app/common/log"
 	"douyin/app/common/model/response"
 	"douyin/app/service/video/api/internal/consts"
-	"douyin/app/service/video/api/internal/consts/video"
+	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
+	"strings"
 
 	"douyin/app/service/video/api/internal/logic"
 	"douyin/app/service/video/api/internal/svc"
@@ -31,8 +33,8 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					sys.SysId,
 					douyin.Api,
 					sys.ServiceIdApi,
-					consts.ErrIdLogicVideo,
-					video.ErrIdOprPublish,
+					consts.ErrIdLogicCrud,
+					crud.ErrIdOprPublish,
 					0,
 				),
 				err.Error(),
@@ -43,7 +45,72 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		l := logic.NewPublishLogic(r.Context(), svcCtx)
 
-		res, err := l.Publish(&req)
+		fhs := r.MultipartForm.File["data"]
+
+		var contentBytes []byte
+
+		if len(fhs) > 0 {
+			file, err := fhs[0].Open()
+			if err != nil {
+				log.Logger.Error(crud.ErrOpenFile, zap.Error(err))
+				response.Fail(
+					w,
+					http.StatusInternalServerError,
+					errx.Encode(
+						errx.Sys,
+						sys.SysId,
+						douyin.Api,
+						sys.ServiceIdApi,
+						consts.ErrIdLogicCrud,
+						crud.ErrIdOprPublish,
+						crud.ErrIdOpenFile,
+					),
+					crud.ErrOpenFile,
+				)
+			}
+
+			contentBytes, err = io.ReadAll(file)
+			if err != nil {
+				log.Logger.Error(errx.ReadBytes, zap.Error(err))
+				response.Fail(
+					w,
+					http.StatusInternalServerError,
+					errx.Encode(
+						errx.Sys,
+						sys.SysId,
+						douyin.Api,
+						sys.ServiceIdApi,
+						consts.ErrIdLogicCrud,
+						crud.ErrIdOprPublish,
+						crud.ErrIdReadBytes,
+					),
+					errx.ReadBytes,
+				)
+			}
+
+			// 判断文件类型
+			contentType := http.DetectContentType(contentBytes)
+			if !strings.HasPrefix(contentType, "video") {
+				httpx.WriteJson(
+					w,
+					http.StatusForbidden,
+					&types.PublishRes{
+						StatusCode: errx.Encode(
+							errx.Logic,
+							sys.SysId,
+							douyin.Api,
+							sys.ServiceIdApi,
+							consts.ErrIdLogicCrud,
+							crud.ErrIdOprPublish,
+							crud.ErrIdInvalidVideoType,
+						),
+						StatusMsg: crud.ErrInvalidVideoType,
+					})
+				return
+			}
+		}
+
+		res, err := l.Publish(&req, contentBytes)
 		if err != nil {
 			log.Logger.Error(errx.ProcessHttpLogic, zap.Error(err))
 		}
