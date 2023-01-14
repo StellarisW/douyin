@@ -95,6 +95,21 @@ func (l *RelationLogic) Relation(req *types.RelationReq) (resp *types.RelationRe
 		}, nil
 	}
 
+	if userId == dstUserId {
+		return &types.RelationRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicRelation,
+				relation.ErrIdOprRelation,
+				relation.ErrIdCannotFollowYourself,
+			),
+			StatusMsg: relation.ErrCannotFollowYourself,
+		}, nil
+	}
+
 	rpcRes, _ := l.svcCtx.SysRpcClient.Relation(l.ctx, &pb.RelationReq{
 		SrcUserId:  userId,
 		DstUserId:  dstUserId,
