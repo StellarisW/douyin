@@ -12,14 +12,17 @@ const (
 const (
 	// 初始化发生的系统错误
 
-	EmptyProjectMode = "project mode not set, please consider configure env: DOUYIN_MODE"
-	InitAgolloClient = "initialize Apollo Client failed."
-	InitMysql        = "initialize mysql failed"
-	InitRedis        = "initialize redis failed"
-	InitMinio        = "initialize minio client failed"
+	EmptyProjectMode       = "project mode not set, please consider configure env: DOUYIN_MODE"
+	InitAgolloClient       = "initialize Apollo Client failed."
+	InitMysql              = "initialize mysql failed"
+	InitRedis              = "initialize redis failed"
+	InitMinio              = "initialize minio client failed"
+	InitNsqService         = "initialize nsq services failed"
+	InitNsqConsumerService = "initialize nsq consumer services failed"
 
 	GetViper       = "get viper failed"
 	GetIdGenerator = "get idGenerator failed"
+	GetNsqProducer = "get nsq producer failed"
 )
 
 const (
@@ -63,6 +66,9 @@ const (
 )
 
 const (
+	// mq
+
+	NsqPublish = "publish msg to nsq failed"
 
 	// Minio
 

@@ -11,7 +11,7 @@ type SendMessageReq struct {
 	Token      string `form:"token"`
 	ToUserId   string `form:"to_user_id"`
 	ActionType string `form:"action_type"`
-	Content    string `form:"content"`
+	Content    string `form:"content,optional"`
 }
 
 type SendMessageRes struct {
@@ -25,7 +25,7 @@ type GetMessageListReq struct {
 }
 
 type GetMessageListRes struct {
-	StatusCode  uint32     `json:"status_code"`
-	StatusMsg   string     `json:"status_msg"`
-	MessageList []*Message `json:"message_list"`
+	StatusCode  uint32      `json:"status_code"`
+	StatusMsg   string      `json:"status_msg"`
+	MessageList interface{} `json:"message_list,optional"`
 }

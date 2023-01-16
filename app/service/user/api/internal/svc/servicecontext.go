@@ -40,8 +40,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	// 4到32位(字母,数字,下划线,减号)
 	usernameReg := regexp2.MustCompile(`^[a-zA-Z0-9_-]{4,32}$`, regexp2.None)
-	// 6-32位(包括至少1个大写字母,1个小写字母,1个数字)
-	passwordRes := regexp2.MustCompile(`^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{6,32}$`, regexp2.None)
+	// 5-32位(包括至少1个大写字母,1个小写字母,1个数字)
+	passwordRes := regexp2.MustCompile(`^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{5,32}$`, regexp2.None)
 
 	return &ServiceContext{
 		Config: c,

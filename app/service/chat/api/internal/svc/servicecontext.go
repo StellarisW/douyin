@@ -4,14 +4,19 @@ import (
 	apollo "douyin/app/common/config"
 	"douyin/app/common/log"
 	"douyin/app/service/chat/api/internal/config"
+	"douyin/app/service/chat/rpc/sys/sys"
 	"github.com/zeromicro/go-zero/rest"
+	"github.com/zeromicro/go-zero/zrpc"
 	"go.uber.org/zap"
 )
 
 type ServiceContext struct {
-	Config            config.Config
+	Config config.Config
+
 	CORSMiddleware    rest.Middleware
 	JWTAuthMiddleware rest.Middleware
+
+	SysRpcClient sys.Sys
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -26,8 +31,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	}
 
 	return &ServiceContext{
-		Config:            c,
+		Config: c,
+
 		CORSMiddleware:    corsMiddleware.Handle,
 		JWTAuthMiddleware: JWTAuthMiddleware.Handle,
+
+		SysRpcClient: sys.NewSys(zrpc.MustNewClient(c.SysRpcClientConf)),
 	}
 }

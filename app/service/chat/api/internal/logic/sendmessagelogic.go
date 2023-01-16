@@ -2,6 +2,14 @@ package logic
 
 import (
 	"context"
+	"douyin/app/common/douyin"
+	"douyin/app/common/errx"
+	"douyin/app/common/middleware"
+	"douyin/app/service/chat/api/internal/consts"
+	"douyin/app/service/chat/api/internal/consts/chat"
+	"douyin/app/service/chat/internal/sys"
+	"douyin/app/service/chat/rpc/sys/pb"
+	"strconv"
 
 	"douyin/app/service/chat/api/internal/svc"
 	"douyin/app/service/chat/api/internal/types"
@@ -24,7 +32,84 @@ func NewSendMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SendM
 }
 
 func (l *SendMessageLogic) SendMessage(req *types.SendMessageReq) (resp *types.SendMessageRes, err error) {
-	// todo: add your logic here and delete this line
+	if req.ActionType != "1" {
+		return &types.SendMessageRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogic,
+				chat.ErrIdOprSendMessage,
+				chat.ErrIdInvalidActionType,
+			),
+			StatusMsg: chat.ErrInvalidActionType,
+		}, nil
+	}
 
-	return
+	userId, err := strconv.ParseInt(l.ctx.Value(middleware.KeyUserId).(string), 10, 64)
+	if err != nil {
+		return &types.SendMessageRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogic,
+				chat.ErrIdOprSendMessage,
+				chat.ErrIdParseInt,
+			),
+			StatusMsg: chat.ErrParseInt,
+		}, nil
+	}
+
+	dstUserId, err := strconv.ParseInt(req.ToUserId, 10, 64)
+	if err != nil {
+		return &types.SendMessageRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogic,
+				chat.ErrIdOprSendMessage,
+				chat.ErrIdParseInt,
+			),
+			StatusMsg: chat.ErrParseInt,
+		}, nil
+	}
+
+	actionType, err := strconv.ParseInt(req.ActionType, 10, 64)
+	if err != nil {
+		return &types.SendMessageRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogic,
+				chat.ErrIdOprSendMessage,
+				chat.ErrIdParseInt,
+			),
+			StatusMsg: chat.ErrParseInt,
+		}, nil
+	}
+
+	rpcRes, _ := l.svcCtx.SysRpcClient.SendMessage(l.ctx, &pb.SendMessageReq{
+		SrcUserId:  userId,
+		DstUserId:  dstUserId,
+		ActionType: uint32(actionType),
+		Content:    req.Content,
+	})
+	if rpcRes.StatusCode != 0 {
+		return &types.SendMessageRes{
+			StatusCode: rpcRes.StatusCode,
+			StatusMsg:  rpcRes.StatusMsg,
+		}, nil
+	}
+
+	return &types.SendMessageRes{
+		StatusCode: 0,
+		StatusMsg:  "send message successfully",
+	}, nil
 }
