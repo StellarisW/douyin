@@ -19,6 +19,7 @@ const (
 	InitMinio              = "initialize minio client failed"
 	InitNsqService         = "initialize nsq services failed"
 	InitNsqConsumerService = "initialize nsq consumer services failed"
+	InitService            = "initialize service failed"
 
 	GetViper       = "get viper failed"
 	GetIdGenerator = "get idGenerator failed"
