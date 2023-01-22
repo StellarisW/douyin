@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
+	"douyin/app/common/log"
 	"douyin/app/common/middleware"
 	"douyin/app/service/chat/api/internal/consts"
 	"douyin/app/service/chat/api/internal/consts/chat"
@@ -101,7 +102,21 @@ func (l *SendMessageLogic) SendMessage(req *types.SendMessageReq) (resp *types.S
 		ActionType: uint32(actionType),
 		Content:    req.Content,
 	})
-	if rpcRes.StatusCode != 0 {
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return &types.SendMessageRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogic,
+				chat.ErrIdOprSendMessage,
+				chat.ErrIdRequestRpcReceiveSys,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	} else if rpcRes.StatusCode != 0 {
 		return &types.SendMessageRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,

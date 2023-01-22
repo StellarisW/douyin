@@ -64,6 +64,7 @@ const (
 	RequestHttpSend       = "send http request failed"
 	RequestHttpStatusCode = "status code err"
 	RequestRpcRes         = "rpc res not ok"
+	RequestRpcReceive     = "rpc res not received"
 )
 
 const (

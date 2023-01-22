@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
+	"douyin/app/common/log"
 	"douyin/app/service/user/api/internal/consts"
 	"douyin/app/service/user/api/internal/consts/sign"
 	"douyin/app/service/user/internal/sys"
@@ -64,7 +65,21 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginRes, err error
 		Username: req.Username,
 		Password: req.Password,
 	})
-	if rpcRes.StatusCode != 0 {
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return &types.LoginRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicSign,
+				sign.ErrIdOprLogin,
+				sign.ErrIdRequestRpcReceiveSys,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	} else if rpcRes.StatusCode != 0 {
 		return &types.LoginRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,

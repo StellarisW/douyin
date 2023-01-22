@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
+	"douyin/app/common/log"
 	"douyin/app/common/middleware"
 	"douyin/app/service/chat/api/internal/consts"
 	"douyin/app/service/chat/api/internal/consts/chat"
@@ -68,7 +69,22 @@ func (l *GetMessageListLogic) GetMessageList(req *types.GetMessageListReq) (resp
 		SrcUserId: userId,
 		DstUserId: dstUserId,
 	})
-	if rpcRes.StatusCode != 0 {
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return &types.GetMessageListRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogic,
+				chat.ErrIdOprGetMessageList,
+				chat.ErrIdRequestRpcReceiveSys,
+			),
+			StatusMsg:   errx.Internal,
+			MessageList: nil,
+		}, nil
+	} else if rpcRes.StatusCode != 0 {
 		return &types.GetMessageListRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,

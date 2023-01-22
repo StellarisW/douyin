@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
+	"douyin/app/common/log"
 	"douyin/app/common/middleware"
 	"douyin/app/service/user/api/internal/consts"
 	"douyin/app/service/user/api/internal/consts/profile"
@@ -68,7 +69,21 @@ func (l *GetProfileLogic) GetProfile(req *types.GetProfileReq) (resp *types.GetP
 		SrcUserId: userId,
 		DstUserId: dstUserId,
 	})
-	if rpcRes.StatusCode != 0 {
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return &types.GetProfileRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicProfile,
+				profile.ErrIdOprGetProfile,
+				profile.ErrIdRequestRpcReceiveSys,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	} else if rpcRes.StatusCode != 0 {
 		return &types.GetProfileRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,

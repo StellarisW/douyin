@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
+	"douyin/app/common/log"
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/info"
 	"douyin/app/service/video/api/internal/svc"
@@ -68,7 +69,21 @@ func (l *FeedLogic) Feed(requ *types.FeedReq) (resp *types.FeedRes, err error) {
 		LatestTime: latestTime,
 		UserId:     userId,
 	})
-	if rpcRes.StatusCode != 0 {
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return &types.FeedRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicInfo,
+				info.ErrIdOprGetCommentList,
+				info.ErrIdRequestRpcReceiveSys,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	} else if rpcRes.StatusCode != 0 {
 		return &types.FeedRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,

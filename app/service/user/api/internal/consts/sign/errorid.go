@@ -8,7 +8,8 @@ const (
 // 通用错误
 
 const (
-	ErrIdInvalidUsername = iota + 1
+	ErrIdRequestRpcReceiveSys = iota + 1
+	ErrIdInvalidUsername
 	ErrIdInvalidPassword
 )
 

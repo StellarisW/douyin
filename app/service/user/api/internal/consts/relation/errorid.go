@@ -12,7 +12,8 @@ const (
 // 通用操作
 
 const (
-	ErrIdParseInt = iota + 1
+	ErrIdRequestRpcReceiveSys = iota + 1
+	ErrIdParseInt
 	ErrIdCommon
 )
 

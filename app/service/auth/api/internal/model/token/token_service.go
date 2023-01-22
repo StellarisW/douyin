@@ -3,11 +3,9 @@ package token
 import (
 	"context"
 	"douyin/app/common/errx"
-	"douyin/app/common/log"
 	"douyin/app/service/auth/internal/auth"
 	"douyin/app/service/auth/rpc/token/enhancer/tokenenhancer"
 	"github.com/zeromicro/go-zero/zrpc"
-	"go.uber.org/zap"
 )
 
 type (
@@ -40,8 +38,7 @@ func (tokenService *RpcTokenService) GenerateToken(ctx context.Context, subject 
 			Username: subject,
 			ClientId: audience,
 		})
-	if rpcRes.Code != 0 {
-		log.Logger.Error(errx.RequestRpcRes, zap.String("msg", rpcRes.Msg))
+	if rpcRes == nil || rpcRes.Code != 0 {
 		return nil, errRpcGenerateOauth2Token
 	}
 
@@ -57,7 +54,7 @@ func (tokenService *RpcTokenService) ReadToken(ctx context.Context, tokenValue s
 		&tokenenhancer.ReadTokenReq{
 			TokenValue: tokenValue,
 		})
-	if rpcRes.Code != 0 {
+	if rpcRes == nil || rpcRes.Code != 0 {
 		return "", errx.New(rpcRes.Code, rpcRes.Msg)
 	}
 

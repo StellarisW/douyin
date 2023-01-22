@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
+	"douyin/app/common/log"
 	"douyin/app/common/middleware"
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/info"
@@ -68,7 +69,21 @@ func (l *GetFavoriteListLogic) GetFavoriteList(req *types.GetFavoriteListReq) (r
 		SrcUserId: userId,
 		DstUserId: dstUserId,
 	})
-	if rpcRes.StatusCode != 0 {
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return &types.GetFavoriteListRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicInfo,
+				info.ErrIdOprGetFavoriteList,
+				info.ErrIdRequestRpcReceiveSys,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	} else if rpcRes.StatusCode != 0 {
 		return &types.GetFavoriteListRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
+	"douyin/app/common/log"
 	"douyin/app/common/middleware"
 	"douyin/app/service/user/api/internal/consts"
 	"douyin/app/service/user/api/internal/consts/relation"
@@ -41,7 +42,7 @@ func (l *GetFollowListLogic) GetFollowList(req *types.GetFollowListReq) (resp *t
 				douyin.Api,
 				sys.ServiceIdApi,
 				consts.ErrIdLogicRelation,
-				relation.ErrIdOprRelation,
+				relation.ErrIdOprGetFollowList,
 				relation.ErrIdParseInt,
 			),
 			StatusMsg: relation.ErrParseInt,
@@ -57,7 +58,7 @@ func (l *GetFollowListLogic) GetFollowList(req *types.GetFollowListReq) (resp *t
 				douyin.Api,
 				sys.ServiceIdApi,
 				consts.ErrIdLogicRelation,
-				relation.ErrIdOprRelation,
+				relation.ErrIdOprGetFollowList,
 				relation.ErrIdParseInt,
 			),
 			StatusMsg: relation.ErrParseInt,
@@ -68,7 +69,21 @@ func (l *GetFollowListLogic) GetFollowList(req *types.GetFollowListReq) (resp *t
 		SrcUserId: userId,
 		DstUserId: dstUserId,
 	})
-	if rpcRes.StatusCode != 0 {
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return &types.GetFollowListRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicRelation,
+				relation.ErrIdOprGetFollowList,
+				relation.ErrIdRequestRpcReceiveSys,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	} else if rpcRes.StatusCode != 0 {
 		return &types.GetFollowListRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,
