@@ -14,7 +14,9 @@ const (
 const (
 	ErrIdMysqlGet = iota
 	ErrIdRequestRpcRes
+	ErrIdRequestRpcReceive
 	ErrIdRedisGet
+	ErrIdRedisPipeExec
 	ErrIdRedisRange
 	ErrIdCommon
 )

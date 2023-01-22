@@ -18,6 +18,7 @@ const (
 	ErrIdRedisInter
 	ErrIdRedisGet
 	ErrIdMysqlGet
+	ErrIdRedisPipeExec
 	ErrIdCommon
 )
 

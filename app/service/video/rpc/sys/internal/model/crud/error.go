@@ -11,6 +11,7 @@ var (
 	errRedisIncr         = errx.New(ErrIdRedisIncr, errx.RedisIncr)
 	errRedisRem          = errx.New(ErrIdRedisRem, errx.RedisRem)
 	errRedisDecr         = errx.New(ErrIdRedisDecr, errx.RedisDecr)
+	errRedisPipeExec     = errx.New(ErrIdRedisPipeExec, errx.RedisPipeExec)
 	errInvalidActionType = errx.New(ErrIdInvalidActionType, ErrInvalidActionType)
 	errMysqlDelete       = errx.New(ErrIdMysqlDelete, errx.MysqlDelete)
 )

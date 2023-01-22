@@ -46,16 +46,17 @@ const (
 const (
 	// Redis类
 
-	RedisGet   = "get redis key failed"
-	RedisSet   = "set redis key failed"
-	RedisDel   = "del redis key failed"
-	RedisScan  = "scan redis key failed"
-	RedisAdd   = "add redis set member failed"
-	RedisRem   = "remove redis set member failed"
-	RedisRange = "get redis set members in range failed"
-	RedisInter = "get redis set inter members failed"
-	RedisIncr  = "incr redis key failed"
-	RedisDecr  = "decr redis key failed"
+	RedisGet      = "get redis key failed"
+	RedisSet      = "set redis key failed"
+	RedisDel      = "del redis key failed"
+	RedisScan     = "scan redis key failed"
+	RedisAdd      = "add redis set member failed"
+	RedisRem      = "remove redis set member failed"
+	RedisRange    = "get redis set members in range failed"
+	RedisInter    = "get redis set inter members failed"
+	RedisIncr     = "incr redis key failed"
+	RedisDecr     = "decr redis key failed"
+	RedisPipeExec = "exec pipeline commands failed"
 )
 
 const (

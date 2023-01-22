@@ -9,6 +9,7 @@ import (
 	"douyin/app/service/user/rpc/sys/pb"
 	"fmt"
 	"github.com/go-redis/redis/v9"
+	"github.com/zeromicro/go-zero/core/mr"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
@@ -33,31 +34,58 @@ func NewModel(db *gorm.DB, rdb *redis.ClusterClient) *DefaultModel {
 
 func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profile, errx.Error) {
 	userSubject := &entity.UserSubject{}
+	var followCnt, followerCnt int64
+	var isFollow bool
 
-	err := m.db.WithContext(ctx).
-		Select("`id`, `username`").
-		Where("`id` = ?").
-		Take(userSubject).
-		Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errUserNotFound
+	err := mr.Finish(func() error {
+		err := m.db.WithContext(ctx).
+			Select("`id`, `username`").
+			Where("`id` = ?").
+			Take(userSubject).
+			Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errUserNotFound
+			}
+			log.Logger.Error(errx.MysqlGet, zap.Error(err))
+			return errMysqlGet
 		}
 
-		log.Logger.Error(errx.MysqlGet, zap.Error(err))
-		return nil, errMysqlGet
-	}
+		return nil
+	}, func() error {
+		var err error
+		followCnt, err = m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, dstUserId)).Result()
+		if err != nil {
+			log.Logger.Error(errx.RedisGet, zap.Error(err))
+			return errRedisGet
+		}
 
-	followCnt, err := m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, dstUserId)).Result()
-	if err != nil {
-		log.Logger.Error(errx.RedisGet, zap.Error(err))
-		return nil, errRedisGet
-	}
+		return nil
+	}, func() error {
+		var err error
+		followerCnt, err = m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId)).Result()
+		if err != nil {
+			log.Logger.Error(errx.RedisGet, zap.Error(err))
+			return errRedisGet
+		}
 
-	followerCnt, err := m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId)).Result()
+		return nil
+	}, func() error {
+		var err error
+		_, err = m.rdb.ZRank(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId), strconv.FormatInt(dstUserId, 10)).Result()
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisGet, zap.Error(err))
+				return errRedisGet
+			}
+		} else {
+			isFollow = true
+		}
+
+		return nil
+	})
 	if err != nil {
-		log.Logger.Error(errx.RedisGet, zap.Error(err))
-		return nil, errRedisGet
+		return nil, errx.New(errx.GetCode(err), err.Error())
 	}
 
 	profile := &pb.Profile{
@@ -65,17 +93,7 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 		Name:          userSubject.Username,
 		FollowCount:   followCnt,
 		FollowerCount: followerCnt,
-		IsFollow:      false,
-	}
-
-	_, err = m.rdb.ZRank(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId), strconv.FormatInt(dstUserId, 10)).Result()
-	if err != nil {
-		if err != redis.Nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
-	} else {
-		profile.IsFollow = true
+		IsFollow:      isFollow,
 	}
 
 	return profile, nil

@@ -92,22 +92,30 @@ func (m *DefaultModel) Favorite(ctx context.Context, userId, videoId int64, acti
 
 		now := time.Now()
 
-		err := m.rdb.ZAdd(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId),
-			redis.Z{
-				Score:  float64(now.Unix()),
-				Member: videoId,
-			}).Err()
+		cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+			pipe.ZAdd(ctx,
+				fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId),
+				redis.Z{
+					Score:  float64(now.Unix()),
+					Member: videoId,
+				})
+
+			pipe.Incr(ctx,
+				fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoId),
+			)
+
+			return nil
+		})
 		if err != nil {
-			log.Logger.Error(errx.RedisAdd, zap.Error(err))
+			log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+			return errRedisPipeExec
+		}
+		if cmds[0].(*redis.IntCmd).Err() != nil {
+			log.Logger.Error(errx.RedisAdd, zap.Error(cmds[0].(*redis.IntCmd).Err()))
 			return errRedisAdd
 		}
-
-		err = m.rdb.Incr(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoId)).
-			Err()
-		if err != nil {
-			log.Logger.Error(errx.RedisIncr, zap.Error(err))
+		if cmds[1].(*redis.IntCmd).Err() != nil {
+			log.Logger.Error(errx.RedisAdd, zap.Error(cmds[0].(*redis.IntCmd).Err()))
 			return errRedisIncr
 		}
 
@@ -115,19 +123,27 @@ func (m *DefaultModel) Favorite(ctx context.Context, userId, videoId int64, acti
 	case 2:
 		// 取消点赞
 
-		err := m.rdb.ZRem(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId),
-			videoId,
-		).Err()
+		cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+			pipe.ZRem(ctx,
+				fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId),
+				videoId,
+			)
+
+			pipe.Decr(ctx,
+				fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoId),
+			)
+
+			return nil
+		})
 		if err != nil {
+			log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+			return errRedisPipeExec
+		}
+		if cmds[0].(*redis.IntCmd).Err() != nil {
 			log.Logger.Error(errx.RedisRem, zap.Error(err))
 			return errRedisRem
 		}
-
-		err = m.rdb.Decr(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoId)).
-			Err()
-		if err != nil {
+		if cmds[1].(*redis.IntCmd).Err() != nil {
 			log.Logger.Error(errx.RedisDecr, zap.Error(err))
 			return errRedisDecr
 		}
@@ -145,15 +161,15 @@ func (m *DefaultModel) Comment(ctx context.Context, userId, videoId int64, actio
 	case 1:
 		// 发布评论
 
-		commentId = m.idGenerator.NewLong()
+		commentSubject := &entity.CommentSubject{
+			ID:          m.idGenerator.NewLong(),
+			UserID:      userId,
+			VideoID:     videoId,
+			CommentText: commentText,
+		}
 
 		err := m.db.WithContext(ctx).
-			Create(&entity.CommentSubject{
-				ID:          commentId,
-				UserID:      userId,
-				VideoID:     videoId,
-				CommentText: commentText,
-			}).Error
+			Create(&commentSubject).Error
 		if err != nil {
 			log.Logger.Error(errx.MysqlInsert, zap.Error(err))
 			return errMysqlInsert
@@ -163,6 +179,7 @@ func (m *DefaultModel) Comment(ctx context.Context, userId, videoId int64, actio
 			fmt.Sprintf("%s%d", video.RdbKeyCommentCnt, videoId)).
 			Err()
 		if err != nil {
+			m.db.WithContext(ctx).Delete(commentSubject)
 			log.Logger.Error(errx.RedisIncr, zap.Error(err))
 			return errRedisIncr
 		}

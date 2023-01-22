@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/spf13/cast"
+	"github.com/zeromicro/go-zero/core/mr"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"time"
@@ -42,25 +43,33 @@ func (m *DefaultModel) Relation(ctx context.Context, srcUserId, dstUserId int64,
 
 		now := time.Now()
 
-		err := m.rdb.ZAdd(ctx,
-			fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
-			redis.Z{
-				Score:  float64(now.Unix()),
-				Member: dstUserId,
-			}).Err()
+		cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+			pipe.ZAdd(ctx,
+				fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
+				redis.Z{
+					Score:  float64(now.Unix()),
+					Member: dstUserId,
+				})
+
+			pipe.ZAdd(ctx,
+				fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId),
+				redis.Z{
+					Score:  float64(now.Unix()),
+					Member: srcUserId,
+				})
+
+			return nil
+		})
 		if err != nil {
-			log.Logger.Error(errx.RedisAdd, zap.Error(err))
+			log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+			return errRedisPipeExec
+		}
+		if cmds[0].(*redis.IntCmd).Err() != nil {
+			log.Logger.Error(errx.RedisAdd, zap.Error(cmds[0].(*redis.IntCmd).Err()))
 			return errRedisAdd
 		}
-
-		err = m.rdb.ZAdd(ctx,
-			fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId),
-			redis.Z{
-				Score:  float64(now.Unix()),
-				Member: srcUserId,
-			}).Err()
-		if err != nil {
-			log.Logger.Error(errx.RedisAdd, zap.Error(err))
+		if cmds[1].(*redis.IntCmd).Err() != nil {
+			log.Logger.Error(errx.RedisAdd, zap.Error(cmds[0].(*redis.IntCmd).Err()))
 			return errRedisAdd
 		}
 
@@ -68,19 +77,19 @@ func (m *DefaultModel) Relation(ctx context.Context, srcUserId, dstUserId int64,
 	case 2:
 		// 取消关注
 
-		err := m.rdb.ZRem(ctx,
-			fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
-			dstUserId,
-		).Err()
-		if err != nil {
-			log.Logger.Error(errx.RedisRem, zap.Error(err))
-			return errRedisRem
-		}
+		_, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+			pipe.ZRem(ctx,
+				fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
+				dstUserId,
+			)
 
-		err = m.rdb.ZRem(ctx,
-			fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId),
-			srcUserId,
-		).Err()
+			pipe.ZRem(ctx,
+				fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId),
+				srcUserId,
+			)
+
+			return nil
+		})
 		if err != nil {
 			log.Logger.Error(errx.RedisRem, zap.Error(err))
 			return errRedisRem
@@ -115,28 +124,43 @@ func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId i
 	interIndex := 0
 	for _, id := range ids {
 		var username string
+		var followCnt, followerCnt int64
 
-		err = m.db.WithContext(ctx).
-			Table(entity.TableNameUserSubject).
-			Select("`username`").
-			Where("`id` = ?", id).
-			Take(&username).
-			Error
-		if err != nil {
-			log.Logger.Error(errx.MysqlGet, zap.Error(err))
-			return nil, errMysqlGet
-		}
+		err = mr.Finish(
+			func() error {
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameUserSubject).
+					Select("`username`").
+					Where("`id` = ?", id).
+					Take(&username).
+					Error
+				if err != nil {
+					log.Logger.Error(errx.MysqlGet, zap.Error(err))
+					return errMysqlGet
+				}
 
-		followCnt, err := m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
+				return nil
+			},
+			func() error {
+				followCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return errRedisGet
+				}
 
-		followerCnt, err := m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				return nil
+			},
+			func() error {
+				followerCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return errRedisGet
+				}
+
+				return nil
+			})
 		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
+			return nil, errx.New(errx.GetCode(err), err.Error())
 		}
 
 		if id == interIds[interIndex] {
@@ -185,28 +209,43 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 	interIndex := 0
 	for _, id := range ids {
 		var username string
+		var followCnt, followerCnt int64
 
-		err = m.db.WithContext(ctx).
-			Table(entity.TableNameUserSubject).
-			Select("`username`").
-			Where("`id` = ?", id).
-			Take(&username).
-			Error
-		if err != nil {
-			log.Logger.Error(errx.MysqlGet, zap.Error(err))
-			return nil, errMysqlGet
-		}
+		err = mr.Finish(
+			func() error {
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameUserSubject).
+					Select("`username`").
+					Where("`id` = ?", id).
+					Take(&username).
+					Error
+				if err != nil {
+					log.Logger.Error(errx.MysqlGet, zap.Error(err))
+					return errMysqlGet
+				}
 
-		followCnt, err := m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
+				return nil
+			},
+			func() error {
+				followCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return errRedisGet
+				}
 
-		followerCnt, err := m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				return nil
+			},
+			func() error {
+				followerCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return errRedisGet
+				}
+
+				return nil
+			})
 		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
+			return nil, errx.New(errx.GetCode(err), err.Error())
 		}
 
 		if id == interIds[interIndex] {
@@ -264,28 +303,43 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 		}
 
 		var username string
+		var followCnt, followerCnt int64
 
-		err = m.db.WithContext(ctx).
-			Table(entity.TableNameUserSubject).
-			Select("`username`").
-			Where("`id` = ?", id).
-			Take(&username).
-			Error
-		if err != nil {
-			log.Logger.Error(errx.MysqlGet, zap.Error(err))
-			return nil, errMysqlGet
-		}
+		err = mr.Finish(
+			func() error {
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameUserSubject).
+					Select("`username`").
+					Where("`id` = ?", id).
+					Take(&username).
+					Error
+				if err != nil {
+					log.Logger.Error(errx.MysqlGet, zap.Error(err))
+					return errMysqlGet
+				}
 
-		followCnt, err := m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
+				return nil
+			},
+			func() error {
+				followCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return errRedisGet
+				}
 
-		followerCnt, err := m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				return nil
+			},
+			func() error {
+				followerCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return errRedisGet
+				}
+
+				return nil
+			})
 		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
+			return nil, errx.New(errx.GetCode(err), err.Error())
 		}
 
 		profiles = append(profiles, &pb.Profile{

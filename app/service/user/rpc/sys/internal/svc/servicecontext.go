@@ -8,6 +8,7 @@ import (
 	"douyin/app/service/user/rpc/sys/internal/model/profile"
 	"douyin/app/service/user/rpc/sys/internal/model/relation"
 	"douyin/app/service/user/rpc/sys/internal/model/sign"
+	"github.com/go-redis/redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -17,6 +18,8 @@ type ServiceContext struct {
 	SignModel     sign.Model
 	ProfileModel  profile.Model
 	RelationModel relation.Model
+
+	Rdb *redis.ClusterClient
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -57,5 +60,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			db,
 			rdb,
 		),
+
+		Rdb: rdb,
 	}
 }

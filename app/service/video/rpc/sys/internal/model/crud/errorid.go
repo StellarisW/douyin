@@ -17,6 +17,7 @@ const (
 	ErrIdRedisIncr
 	ErrIdRedisRem
 	ErrIdRedisDecr
+	ErrIdRedisPipeExec
 	ErrIdInvalidActionType
 	ErrIdMysqlDelete
 	ErrIdCommon

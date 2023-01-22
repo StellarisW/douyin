@@ -12,15 +12,17 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"strconv"
+	"sync"
 	"time"
 )
 
 type (
 	Model interface {
-		Feed(ctx context.Context, latestTime int64, userId int64) ([]*pb.Video, int64, errx.Error)
+		Feed(ctx context.Context, latestTime int64, srcUserId int64) ([]*pb.Video, int64, errx.Error)
 		GetPublishList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Video, errx.Error)
 		GetFavoriteList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Video, errx.Error)
 		GetCommentList(ctx context.Context, userId, videoId int64) ([]*pb.Comment, errx.Error)
@@ -40,7 +42,7 @@ func NewModel(db *gorm.DB, rdb *redis.ClusterClient, userSysRpcClient usersys.Sy
 	}
 }
 
-func (m *DefaultModel) Feed(ctx context.Context, latestTime int64, userId int64) ([]*pb.Video, int64, errx.Error) {
+func (m *DefaultModel) Feed(ctx context.Context, latestTime int64, srcUserId int64) ([]*pb.Video, int64, errx.Error) {
 	videoSubjects := make([]*entity.VideoSubject, 0)
 
 	var filterTime time.Time
@@ -64,66 +66,9 @@ func (m *DefaultModel) Feed(ctx context.Context, latestTime int64, userId int64)
 		return nil, 0, errMysqlGet
 	}
 
-	videos := make([]*pb.Video, 0, len(videoSubjects))
-
-	for _, videoSubject := range videoSubjects {
-		rpcRes, _ := m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
-			SrcUserId: userId,
-			DstUserId: videoSubject.UserID,
-		})
-		if rpcRes.StatusCode != 0 {
-			log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
-			return nil, 0, errRequestRpcRes
-		}
-
-		var favoriteCount, commentCount int64
-
-		favoriteCount, err = m.rdb.Get(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubject.ID),
-		).Int64()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, 0, errRedisGet
-		}
-
-		commentCount, err = m.rdb.Get(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyCommentCnt, videoSubject.ID),
-		).Int64()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, 0, errRedisGet
-		}
-
-		var isFavorite bool
-
-		_, err = m.rdb.ZRank(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId), strconv.FormatInt(videoSubject.ID, 10)).
-			Result()
-		if err != nil {
-			if err != redis.Nil {
-				log.Logger.Error(errx.RedisGet, zap.Error(err))
-				return nil, 0, errRedisGet
-			}
-		} else {
-			isFavorite = true
-		}
-
-		videos = append(videos, &pb.Video{
-			Id: videoSubject.ID,
-			User: &pb.Profile{
-				Id:            videoSubject.UserID,
-				Name:          rpcRes.User.Name,
-				FollowCount:   rpcRes.User.FollowCount,
-				FollowerCount: rpcRes.User.FollowerCount,
-				IsFollow:      rpcRes.User.IsFollow,
-			},
-			PlayUrl:       videoSubject.PlayURL,
-			CoverUrl:      videoSubject.CoverURL,
-			FavoriteCount: favoriteCount,
-			CommentCount:  commentCount,
-			IsFavorite:    isFavorite,
-			Title:         videoSubject.Title,
-		})
+	videos, erx := m.getVideosInfo(ctx, srcUserId, videoSubjects)
+	if erx != nil {
+		return nil, 0, erx
 	}
 
 	return videos, videoSubjects[len(videoSubjects)-1].UpdateTime.Unix(), nil
@@ -144,66 +89,9 @@ func (m *DefaultModel) GetPublishList(ctx context.Context, srcUserId, dstUserId 
 		return nil, errMysqlGet
 	}
 
-	videos := make([]*pb.Video, 0, len(videoSubjects))
-
-	for _, videoSubject := range videoSubjects {
-		rpcRes, _ := m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
-			SrcUserId: srcUserId,
-			DstUserId: videoSubject.UserID,
-		})
-		if rpcRes.StatusCode != 0 {
-			log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
-			return nil, errRequestRpcRes
-		}
-
-		var favoriteCount, commentCount int64
-
-		favoriteCount, err = m.rdb.Get(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubject.ID),
-		).Int64()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
-
-		commentCount, err = m.rdb.Get(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyCommentCnt, videoSubject.ID),
-		).Int64()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
-
-		var isFavorite bool
-
-		_, err = m.rdb.ZRank(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavorite, srcUserId), strconv.FormatInt(videoSubject.ID, 10)).
-			Result()
-		if err != nil {
-			if err != redis.Nil {
-				log.Logger.Error(errx.RedisGet, zap.Error(err))
-				return nil, errRedisGet
-			}
-		} else {
-			isFavorite = true
-		}
-
-		videos = append(videos, &pb.Video{
-			Id: videoSubject.ID,
-			User: &pb.Profile{
-				Id:            videoSubject.UserID,
-				Name:          rpcRes.User.Name,
-				FollowCount:   rpcRes.User.FollowCount,
-				FollowerCount: rpcRes.User.FollowerCount,
-				IsFollow:      rpcRes.User.IsFollow,
-			},
-			PlayUrl:       videoSubject.PlayURL,
-			CoverUrl:      videoSubject.CoverURL,
-			FavoriteCount: favoriteCount,
-			CommentCount:  commentCount,
-			IsFavorite:    isFavorite,
-			Title:         videoSubject.Title,
-		})
+	videos, erx := m.getVideosInfo(ctx, srcUserId, videoSubjects)
+	if erx != nil {
+		return nil, erx
 	}
 
 	return videos, nil
@@ -227,66 +115,9 @@ func (m *DefaultModel) GetFavoriteList(ctx context.Context, srcUserId, dstUserId
 		return nil, errMysqlGet
 	}
 
-	videos := make([]*pb.Video, 0, len(videoSubjects))
-
-	for _, videoSubject := range videoSubjects {
-		rpcRes, _ := m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
-			SrcUserId: srcUserId,
-			DstUserId: videoSubject.UserID,
-		})
-		if rpcRes.StatusCode != 0 {
-			log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
-			return nil, errRequestRpcRes
-		}
-
-		var favoriteCount, commentCount int64
-
-		favoriteCount, err = m.rdb.Get(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubject.ID),
-		).Int64()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
-
-		commentCount, err = m.rdb.Get(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyCommentCnt, videoSubject.ID),
-		).Int64()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return nil, errRedisGet
-		}
-
-		var isFavorite bool
-
-		_, err = m.rdb.ZRank(ctx,
-			fmt.Sprintf("%s%d", video.RdbKeyFavorite, srcUserId), strconv.FormatInt(videoSubject.ID, 10)).
-			Result()
-		if err != nil {
-			if err != redis.Nil {
-				log.Logger.Error(errx.RedisGet, zap.Error(err))
-				return nil, errRedisGet
-			}
-		} else {
-			isFavorite = true
-		}
-
-		videos = append(videos, &pb.Video{
-			Id: videoSubject.ID,
-			User: &pb.Profile{
-				Id:            videoSubject.UserID,
-				Name:          rpcRes.User.Name,
-				FollowCount:   rpcRes.User.FollowCount,
-				FollowerCount: rpcRes.User.FollowerCount,
-				IsFollow:      rpcRes.User.IsFollow,
-			},
-			PlayUrl:       videoSubject.PlayURL,
-			CoverUrl:      videoSubject.CoverURL,
-			FavoriteCount: favoriteCount,
-			CommentCount:  commentCount,
-			IsFavorite:    isFavorite,
-			Title:         videoSubject.Title,
-		})
+	videos, erx := m.getVideosInfo(ctx, srcUserId, videoSubjects)
+	if erx != nil {
+		return nil, erx
 	}
 
 	return videos, nil
@@ -304,31 +135,166 @@ func (m *DefaultModel) GetCommentList(ctx context.Context, userId, videoId int64
 		return nil, errMysqlGet
 	}
 
-	comments := make([]*pb.Comment, 0, len(commentSubjects))
+	comments := make([]*pb.Comment, len(commentSubjects))
 
-	for _, commentSubject := range commentSubjects {
-		rpcRes, _ := m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
-			SrcUserId: userId,
-			DstUserId: commentSubject.UserID,
-		})
-		if rpcRes.StatusCode != 0 {
-			log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
-			return nil, errRequestRpcRes
-		}
+	size := len(commentSubjects)
 
-		comments = append(comments, &pb.Comment{
-			Id: commentSubject.ID,
-			User: &pb.Profile{
-				Id:            commentSubject.UserID,
-				Name:          rpcRes.User.Name,
-				FollowCount:   rpcRes.User.FollowCount,
-				FollowerCount: rpcRes.User.FollowerCount,
-				IsFollow:      rpcRes.User.IsFollow,
-			},
-			Content:    commentSubject.CommentText,
-			CreateDate: commentSubject.CreateTime.Format("06-01"),
+	eg := new(errgroup.Group)
+
+	for i := 0; i < size; i++ {
+		i := i
+		eg.Go(func() error {
+			rpcRes, _ := m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
+				SrcUserId: userId,
+				DstUserId: commentSubjects[i].UserID,
+			})
+			if rpcRes == nil {
+				log.Logger.Error(errx.RequestRpcReceive)
+				return errRequestRpcReceive
+			}
+			if rpcRes.StatusCode != 0 {
+				log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
+				return errRequestRpcRes
+			}
+
+			comments[i] = &pb.Comment{
+				Id: commentSubjects[i].ID,
+				User: &pb.Profile{
+					Id:            commentSubjects[i].UserID,
+					Name:          rpcRes.User.Name,
+					FollowCount:   rpcRes.User.FollowCount,
+					FollowerCount: rpcRes.User.FollowerCount,
+					IsFollow:      rpcRes.User.IsFollow,
+				},
+				Content:    commentSubjects[i].CommentText,
+				CreateDate: commentSubjects[i].CreateTime.Format("06-01"),
+			}
+
+			return nil
 		})
 	}
 
+	if err := eg.Wait(); err != nil {
+		return nil, errx.New(errx.GetCode(err), err.Error())
+	}
+
 	return comments, nil
+}
+
+func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, videoSubjects []*entity.VideoSubject) ([]*pb.Video, errx.Error) {
+	videos := make([]*pb.Video, len(videoSubjects))
+
+	size := len(videoSubjects)
+
+	eg := new(errgroup.Group)
+
+	for i := 0; i < size; i++ {
+		i := i
+		eg.Go(func() error {
+			wg := sync.WaitGroup{}
+
+			rpcRes := &userpb.GetProfileRes{}
+
+			wg.Add(1)
+			go func() {
+				rpcRes, _ = m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
+					SrcUserId: srcUserId,
+					DstUserId: videoSubjects[i].UserID,
+				})
+			}()
+
+			var favoriteCount, commentCount int64
+			var isFavorite bool
+			var erx errx.Error
+
+			wg.Add(1)
+			go func() {
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.Get(ctx,
+						fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
+					)
+
+					pipe.Get(ctx,
+						fmt.Sprintf("%s%d", video.RdbKeyCommentCnt, videoSubjects[i].ID),
+					)
+
+					pipe.ZRank(ctx,
+						fmt.Sprintf("%s%d", video.RdbKeyFavorite, srcUserId), strconv.FormatInt(videoSubjects[i].ID, 10),
+					)
+
+					return nil
+				})
+				if err != nil {
+					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+					erx = errRedisPipeExec
+					return
+				}
+
+				favoriteCount, err = cmds[0].(*redis.StringCmd).Int64()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				commentCount, err = cmds[1].(*redis.StringCmd).Int64()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				_, err = cmds[2].(*redis.IntCmd).Result()
+				if err != nil {
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisGet, zap.Error(err))
+						erx = errRedisGet
+						return
+					}
+				} else {
+					isFavorite = true
+				}
+			}()
+
+			wg.Wait()
+
+			if rpcRes == nil {
+				log.Logger.Error(errx.RequestRpcReceive)
+				return errRequestRpcReceive
+			}
+			if rpcRes.StatusCode != 0 {
+				log.Logger.Error(errx.RequestRpcRes)
+				return errRequestRpcRes
+			}
+
+			if erx != nil {
+				return erx
+			}
+
+			videos[i] = &pb.Video{
+				Id: videoSubjects[i].ID,
+				User: &pb.Profile{
+					Id:            videoSubjects[i].UserID,
+					Name:          rpcRes.User.Name,
+					FollowCount:   rpcRes.User.FollowCount,
+					FollowerCount: rpcRes.User.FollowerCount,
+					IsFollow:      rpcRes.User.IsFollow,
+				},
+				PlayUrl:       videoSubjects[i].PlayURL,
+				CoverUrl:      videoSubjects[i].CoverURL,
+				FavoriteCount: favoriteCount,
+				CommentCount:  commentCount,
+				IsFavorite:    isFavorite,
+				Title:         videoSubjects[i].Title,
+			}
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, errx.New(errx.GetCode(err), err.Error())
+	}
+
+	return videos, nil
 }
