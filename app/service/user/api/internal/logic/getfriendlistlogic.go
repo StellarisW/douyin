@@ -78,5 +78,6 @@ func (l *GetFriendListLogic) GetFriendList(req *types.GetFriendListReq) (resp *t
 	return &types.GetFriendListRes{
 		StatusCode: 0,
 		StatusMsg:  "get friend list successfully",
+		UserList:   rpcRes.UserList,
 	}, nil
 }

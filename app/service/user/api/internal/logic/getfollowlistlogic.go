@@ -78,5 +78,6 @@ func (l *GetFollowListLogic) GetFollowList(req *types.GetFollowListReq) (resp *t
 	return &types.GetFollowListRes{
 		StatusCode: 0,
 		StatusMsg:  "get follow list successfully",
+		UserList:   rpcRes.UserList,
 	}, nil
 }

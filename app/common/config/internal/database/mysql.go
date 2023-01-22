@@ -25,7 +25,8 @@ func (g *Group) GetMysqlGormDB() (db *gorm.DB, err error) {
 	}
 
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger,
+		PrepareStmt: true,
+		Logger:      logger,
 	})
 	if err != nil {
 		return nil, err

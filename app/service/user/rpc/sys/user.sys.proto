@@ -11,9 +11,6 @@ message Profile{
     int64 follower_count=4;
     bool is_follow=5;
 }
-message Profiles{
-    repeated Profile profiles = 1;
-}
 
 message RegisterReq {
     string username = 1;
@@ -64,7 +61,7 @@ message GetFollowListReq{
 message GetFollowListRes{
     uint32 status_code = 1;
     string status_msg = 2;
-    Profiles user_list=3;
+    repeated Profile user_list=3;
 }
 
 message GetFollowerListReq{
@@ -74,7 +71,7 @@ message GetFollowerListReq{
 message GetFollowerListRes{
     uint32 status_code = 1;
     string status_msg = 2;
-    Profiles user_list=3;
+    repeated Profile user_list=3;
 }
 
 message GetFriendListReq{
@@ -84,7 +81,7 @@ message GetFriendListReq{
 message GetFriendListRes{
     uint32 status_code = 1;
     string status_msg = 2;
-    Profiles user_list=3;
+    repeated Profile user_list=3;
 }
 
 service Sys {

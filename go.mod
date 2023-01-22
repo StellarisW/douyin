@@ -6,6 +6,7 @@ require (
 	github.com/apolloconfig/agollo/v4 v4.3.0
 	github.com/dlclark/regexp2 v1.8.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
+	github.com/gorilla/websocket v1.4.2
 	github.com/imroc/req/v3 v3.29.0
 	github.com/lestrrat-go/jwx/v2 v2.0.8
 	github.com/minio/minio-go/v7 v7.0.47

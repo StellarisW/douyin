@@ -18,9 +18,9 @@ import (
 type (
 	Model interface {
 		Relation(ctx context.Context, srcUserId, dstUserId int64, actionType uint32) errx.Error
-		GetFollowList(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profiles, errx.Error)
-		GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profiles, errx.Error)
-		GetFriendList(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profiles, errx.Error)
+		GetFollowList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error)
+		GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error)
+		GetFriendList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error)
 	}
 	DefaultModel struct {
 		db  *gorm.DB
@@ -92,7 +92,7 @@ func (m *DefaultModel) Relation(ctx context.Context, srcUserId, dstUserId int64,
 	}
 }
 
-func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profiles, errx.Error) {
+func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
 	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, dstUserId), 0, -1).Result()
 	if err != nil {
 		log.Logger.Error(errx.RedisRange, zap.Error(err))
@@ -159,12 +159,10 @@ func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId i
 		}
 	}
 
-	return &pb.Profiles{
-		Profiles: profiles,
-	}, nil
+	return profiles, nil
 }
 
-func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profiles, errx.Error) {
+func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
 	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, srcUserId), 0, -1).Result()
 	if err != nil {
 		log.Logger.Error(errx.RedisRange, zap.Error(err))
@@ -231,12 +229,10 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 		}
 	}
 
-	return &pb.Profiles{
-		Profiles: profiles,
-	}, nil
+	return profiles, nil
 }
 
-func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profiles, errx.Error) {
+func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
 	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId), 0, -1).Result()
 	if err != nil {
 		log.Logger.Error(errx.RedisRange, zap.Error(err))
@@ -303,7 +299,5 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 		isFollow = false
 	}
 
-	return &pb.Profiles{
-		Profiles: profiles,
-	}, nil
+	return profiles, nil
 }

@@ -24,7 +24,6 @@ type (
 	LoginReq           = pb.LoginReq
 	LoginRes           = pb.LoginRes
 	Profile            = pb.Profile
-	Profiles           = pb.Profiles
 	RegisterReq        = pb.RegisterReq
 	RegisterRes        = pb.RegisterRes
 	RelationReq        = pb.RelationReq
