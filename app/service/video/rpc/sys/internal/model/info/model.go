@@ -201,6 +201,8 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 					SrcUserId: srcUserId,
 					DstUserId: videoSubjects[i].UserID,
 				})
+
+				wg.Done()
 			}()
 
 			var favoriteCount, commentCount int64
@@ -254,6 +256,8 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 				} else {
 					isFavorite = true
 				}
+
+				wg.Done()
 			}()
 
 			wg.Wait()
