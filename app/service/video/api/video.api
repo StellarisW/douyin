@@ -30,7 +30,7 @@ type (
 
 type (
 	FeedReq {
-		LastestTime string `form:"lastest_time,optional"`
+		LastestTime string `form:"latest_time,optional"`
 		Token       string `form:"token,optional"`
 	}
 	FeedRes {

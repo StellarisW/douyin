@@ -28,7 +28,7 @@ type Comment struct {
 }
 
 type FeedReq struct {
-	LastestTime string `form:"lastest_time,optional"`
+	LastestTime string `form:"latest_time,optional"`
 	Token       string `form:"token,optional"`
 }
 
