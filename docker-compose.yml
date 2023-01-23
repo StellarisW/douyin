@@ -113,9 +113,9 @@ services:
       labels:
         - traefik.enable=true
         - traefik.docker.network=traefik
-        - traefik.http.routers.douyin-dormitory-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/feed`,`/douyin/publish`,`/douyin/favorite`,/douyin/comment`)
-        - traefik.http.routers.douyin-dormitory-api.tls.certResolver=le
-        - traefik.http.services.douyin-dormitory-api.loadbalancer.server.port=11150
+        - traefik.http.routers.douyin-video-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/feed`,`/douyin/publish`,`/douyin/favorite`,`/douyin/comment`)
+        - traefik.http.routers.douyin-video-api.tls.certResolver=le
+        - traefik.http.services.douyin-video-api.loadbalancer.server.port=11140
   douyin-video-rpc-sys:
     depends_on:
       - douyin-user-rpc-sys
@@ -152,9 +152,9 @@ services:
       labels:
         - traefik.enable=true
         - traefik.docker.network=traefik
-        - traefik.http.routers.douyin-jwzx-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/message`)
-        - traefik.http.routers.douyin-jwzx-api.tls.certResolver=le
-        - traefik.http.services.douyin-jwzx-api.loadbalancer.server.port=11140
+        - traefik.http.routers.douyin-chat-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/message`)
+        - traefik.http.routers.douyin-chat-api.tls.certResolver=le
+        - traefik.http.services.douyin-chat-api.loadbalancer.server.port=11150
 
   douyin-chat-rpc-sys:
     image: ${REGISTRY_URL}/douyin/chat-rpc-sys
