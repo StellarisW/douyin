@@ -21,7 +21,7 @@ func Chat(producer *nsq.Producer, rawMessage Message) error {
 		return fmt.Errorf("%s, err: %v", errx.JsonMarshal, err)
 	}
 
-	err = producer.Publish(consts.ChannelChat, message)
+	err = producer.Publish(consts.TopicChat, message)
 	if err != nil {
 		return fmt.Errorf("%s, err: %v", errx.NsqPublish, err)
 	}

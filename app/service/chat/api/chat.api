@@ -1,14 +1,6 @@
 syntax = "v1"
 
 type (
-	Message {
-		Id         int64  `json:"id"`
-		Content    string `json:"content"`
-		CreateTime string `json:"create_time"`
-	}
-)
-
-type (
 	SendMessageReq {
 		Token      string `form:"token"`
 		ToUserId   string `form:"to_user_id"`

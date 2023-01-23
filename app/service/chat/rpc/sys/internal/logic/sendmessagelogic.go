@@ -32,7 +32,7 @@ func NewSendMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SendM
 }
 
 func (l *SendMessageLogic) SendMessage(in *pb.SendMessageReq) (*pb.SendMessageRes, error) {
-	produer, err := nsq.GetProducer()
+	producer, err := nsq.GetProducer()
 	if err != nil {
 		log.Logger.Error(errx.GetNsqProducer)
 		return &pb.SendMessageRes{
@@ -49,7 +49,7 @@ func (l *SendMessageLogic) SendMessage(in *pb.SendMessageReq) (*pb.SendMessageRe
 		}, nil
 	}
 
-	err = chat.Chat(produer, chat.Message{
+	err = chat.Chat(producer, chat.Message{
 		SrcUserId:  in.SrcUserId,
 		DstUserId:  in.DstUserId,
 		ActionType: in.ActionType,
