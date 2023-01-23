@@ -88,7 +88,7 @@ func NewLoggerWithOptions(options Options) (err error) {
 			_ = zapLogger.Sync()
 		}(Logger)
 	case douyin.ProMode:
-		dynamicLevel.SetLevel(zap.InfoLevel)
+		dynamicLevel.SetLevel(zap.ErrorLevel)
 
 		Logger = zap.New(zapcore.NewCore(
 			encoder,
