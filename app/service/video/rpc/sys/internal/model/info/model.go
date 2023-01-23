@@ -55,11 +55,11 @@ func (m *DefaultModel) Feed(ctx context.Context, latestTime int64, srcUserId int
 
 	err := m.db.WithContext(ctx).
 		Where("`update_time` < ?", filterTime).
-		Find(&videoSubjects).
 		Order(clause.OrderByColumn{
 			Column: clause.Column{Name: "update_time"},
 			Desc:   true,
 		}).Limit(30).
+		Find(&videoSubjects).
 		Error
 	if err != nil {
 		log.Logger.Error(errx.MysqlGet, zap.Error(err))
