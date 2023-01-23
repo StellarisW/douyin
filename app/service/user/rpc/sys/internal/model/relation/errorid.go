@@ -26,8 +26,12 @@ const (
 
 const (
 	ErrIdInvalidActionType = iota + ErrIdCommon
+	ErrIdAlreadyFollow
+	ErrIdAlreadyUnfollow
 )
 
 const (
 	ErrInvalidActionType = "invalid action type"
+	ErrAlreadyFollow     = "already followed"
+	ErrAlreadyUnfollow   = "already unfollowed"
 )

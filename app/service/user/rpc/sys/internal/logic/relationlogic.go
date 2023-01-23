@@ -31,6 +31,20 @@ func NewRelationLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Relation
 func (l *RelationLogic) Relation(in *pb.RelationReq) (*pb.RelationRes, error) {
 	erx := l.svcCtx.RelationModel.Relation(l.ctx, in.SrcUserId, in.DstUserId, in.ActionType)
 	if erx != nil {
+		if erx.Code() == relation.ErrIdAlreadyFollow || erx.Code() == relation.ErrIdAlreadyUnfollow {
+			return &pb.RelationRes{
+				StatusCode: errx.Encode(
+					errx.Logic,
+					sys.SysId,
+					douyin.Rpc,
+					sys.ServiceIdRpcSys,
+					consts.ErrIdLogicRelation,
+					relation.ErrIdOprRelation,
+					erx.Code(),
+				),
+				StatusMsg: erx.Error(),
+			}, nil
+		}
 		return &pb.RelationRes{
 			StatusCode: errx.Encode(
 				errx.Sys,

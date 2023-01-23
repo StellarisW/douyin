@@ -43,7 +43,7 @@ func (g *Group) GetMysqlDsn() (dsn string, err error) {
 	}
 
 	// 拼接dsn字符串
-	dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Asia%%2FShanghai&tls=true",
+	dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Asia%%2FShanghai",
 		v.GetString("Database.Mysql.Username"),        // 数据库用户名
 		v.GetString("Database.Mysql.Password"),        // 数据库密码
 		v.GetString("Database.Mysql.Address"),         // 数据库地址

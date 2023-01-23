@@ -29,7 +29,7 @@ func NewGetFollowerListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 }
 
 func (l *GetFollowerListLogic) GetFollowerList(in *pb.GetFollowerListReq) (*pb.GetFollowerListRes, error) {
-	list, erx := l.svcCtx.RelationModel.GetFollowList(l.ctx, in.SrcUserId, in.DstUserId)
+	list, erx := l.svcCtx.RelationModel.GetFollowerList(l.ctx, in.SrcUserId, in.DstUserId)
 	if erx != nil {
 		return &pb.GetFollowerListRes{
 			StatusCode: errx.Encode(

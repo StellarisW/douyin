@@ -25,11 +25,11 @@ type Profile struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id            int64  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	FollowCount   int64  `protobuf:"varint,3,opt,name=follow_count,json=followCount,proto3" json:"follow_count,omitempty"`
-	FollowerCount int64  `protobuf:"varint,4,opt,name=follower_count,json=followerCount,proto3" json:"follower_count,omitempty"`
-	IsFollow      bool   `protobuf:"varint,5,opt,name=is_follow,json=isFollow,proto3" json:"is_follow,omitempty"`
+	Id            int64  `protobuf:"varint,1,opt,name=id,proto3" json:"id"`
+	Name          string `protobuf:"bytes,2,opt,name=name,proto3" json:"name"`
+	FollowCount   int64  `protobuf:"varint,3,opt,name=follow_count,json=followCount,proto3" json:"follow_count"`
+	FollowerCount int64  `protobuf:"varint,4,opt,name=follower_count,json=followerCount,proto3" json:"follower_count"`
+	IsFollow      bool   `protobuf:"varint,5,opt,name=is_follow,json=isFollow,proto3" json:"is_follow"`
 }
 
 func (x *Profile) Reset() {
@@ -104,14 +104,14 @@ type Video struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id            int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	User          *Profile `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
-	PlayUrl       string   `protobuf:"bytes,3,opt,name=play_url,json=playUrl,proto3" json:"play_url,omitempty"`
-	CoverUrl      string   `protobuf:"bytes,4,opt,name=cover_url,json=coverUrl,proto3" json:"cover_url,omitempty"`
-	FavoriteCount int64    `protobuf:"varint,5,opt,name=favorite_count,json=favoriteCount,proto3" json:"favorite_count,omitempty"`
-	CommentCount  int64    `protobuf:"varint,6,opt,name=comment_count,json=commentCount,proto3" json:"comment_count,omitempty"`
-	IsFavorite    bool     `protobuf:"varint,7,opt,name=is_favorite,json=isFavorite,proto3" json:"is_favorite,omitempty"`
-	Title         string   `protobuf:"bytes,8,opt,name=title,proto3" json:"title,omitempty"`
+	Id            int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id"`
+	User          *Profile `protobuf:"bytes,2,opt,name=user,proto3" json:"user"`
+	PlayUrl       string   `protobuf:"bytes,3,opt,name=play_url,json=playUrl,proto3" json:"play_url"`
+	CoverUrl      string   `protobuf:"bytes,4,opt,name=cover_url,json=coverUrl,proto3" json:"cover_url"`
+	FavoriteCount int64    `protobuf:"varint,5,opt,name=favorite_count,json=favoriteCount,proto3" json:"favorite_count"`
+	CommentCount  int64    `protobuf:"varint,6,opt,name=comment_count,json=commentCount,proto3" json:"comment_count"`
+	IsFavorite    bool     `protobuf:"varint,7,opt,name=is_favorite,json=isFavorite,proto3" json:"is_favorite"`
+	Title         string   `protobuf:"bytes,8,opt,name=title,proto3" json:"title"`
 }
 
 func (x *Video) Reset() {
@@ -207,10 +207,10 @@ type Comment struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id         int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	User       *Profile `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
-	Content    string   `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
-	CreateDate string   `protobuf:"bytes,4,opt,name=create_date,json=createDate,proto3" json:"create_date,omitempty"`
+	Id         int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id"`
+	User       *Profile `protobuf:"bytes,2,opt,name=user,proto3" json:"user"`
+	Content    string   `protobuf:"bytes,3,opt,name=content,proto3" json:"content"`
+	CreateDate string   `protobuf:"bytes,4,opt,name=create_date,json=createDate,proto3" json:"create_date"`
 }
 
 func (x *Comment) Reset() {

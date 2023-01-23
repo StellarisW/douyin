@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/spf13/cast"
-	"github.com/zeromicro/go-zero/core/mr"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
+	"strconv"
+	"sync"
 	"time"
 )
 
@@ -40,6 +42,18 @@ func (m *DefaultModel) Relation(ctx context.Context, srcUserId, dstUserId int64,
 	switch actionType {
 	case 1:
 		// 关注
+
+		_, err := m.rdb.ZRank(ctx,
+			fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
+			strconv.FormatInt(dstUserId, 10)).Result()
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisGet, zap.Error(err))
+				return errRedisGet
+			}
+		} else {
+			return errAlreadyFollow
+		}
 
 		now := time.Now()
 
@@ -77,7 +91,18 @@ func (m *DefaultModel) Relation(ctx context.Context, srcUserId, dstUserId int64,
 	case 2:
 		// 取消关注
 
-		_, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		_, err := m.rdb.ZRank(ctx,
+			fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
+			strconv.FormatInt(dstUserId, 10)).Result()
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisGet, zap.Error(err))
+				return errRedisGet
+			}
+			return errAlreadyUnfollow
+		}
+
+		_, err = m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 			pipe.ZRem(ctx,
 				fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
 				dstUserId,
@@ -119,75 +144,111 @@ func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId i
 		return nil, errRedisInter
 	}
 
-	profiles := make([]*pb.Profile, 0, len(ids))
+	if len(interIds) == 0 {
+		interIds = append(interIds, "")
+	}
+
+	profiles := make([]*pb.Profile, len(ids))
+
+	size := len(ids)
+
+	eg := new(errgroup.Group)
 
 	interIndex := 0
-	for _, id := range ids {
-		var username string
-		var followCnt, followerCnt int64
+	for i := 0; i < size; i++ {
+		i := i
+		id := ids[i]
 
-		err = mr.Finish(
-			func() error {
+		var isFollow bool
+
+		if ids[i] == interIds[interIndex] {
+			isFollow = true
+			interIndex++
+		}
+
+		eg.Go(func() error {
+			wg := sync.WaitGroup{}
+
+			var username string
+
+			wg.Add(1)
+			go func() {
 				err = m.db.WithContext(ctx).
 					Table(entity.TableNameUserSubject).
 					Select("`username`").
 					Where("`id` = ?", id).
 					Take(&username).
 					Error
+
+				wg.Done()
+			}()
+
+			var followCnt, followerCnt int64
+			var erx errx.Error
+
+			wg.Add(1)
+			go func() {
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.ZCard(ctx, user.RdbKeyFollow+id)
+					pipe.ZCard(ctx, user.RdbKeyFollower+id)
+
+					return nil
+				})
 				if err != nil {
-					log.Logger.Error(errx.MysqlGet, zap.Error(err))
-					return errMysqlGet
+					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+					erx = errRedisPipeExec
+					return
 				}
 
-				return nil
-			},
-			func() error {
-				followCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
+				followCnt, err = cmds[0].(*redis.IntCmd).Result()
 				if err != nil {
 					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					return errRedisGet
+					erx = errRedisGet
+					return
 				}
 
-				return nil
-			},
-			func() error {
-				followerCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				followerCnt, err = cmds[1].(*redis.IntCmd).Result()
 				if err != nil {
 					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					return errRedisGet
+					erx = errRedisGet
+					return
 				}
 
-				return nil
-			})
-		if err != nil {
-			return nil, errx.New(errx.GetCode(err), err.Error())
-		}
+				wg.Done()
+			}()
 
-		if id == interIds[interIndex] {
-			profiles = append(profiles, &pb.Profile{
+			wg.Wait()
+
+			if err != nil {
+				log.Logger.Error(errx.MysqlGet, zap.Error(err))
+				return errMysqlGet
+			}
+
+			if erx != nil {
+				return erx
+			}
+
+			profiles[i] = &pb.Profile{
 				Id:            cast.ToInt64(id),
 				Name:          username,
 				FollowCount:   followCnt,
 				FollowerCount: followerCnt,
-				IsFollow:      true,
-			})
-			interIndex++
-		} else {
-			profiles = append(profiles, &pb.Profile{
-				Id:            cast.ToInt64(id),
-				Name:          username,
-				FollowCount:   followCnt,
-				FollowerCount: followerCnt,
-				IsFollow:      false,
-			})
-		}
+				IsFollow:      isFollow,
+			}
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, errx.New(errx.GetCode(err), err.Error())
 	}
 
 	return profiles, nil
 }
 
 func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
-	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, srcUserId), 0, -1).Result()
+	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId), 0, -1).Result()
 	if err != nil {
 		log.Logger.Error(errx.RedisRange, zap.Error(err))
 		return nil, errRedisRange
@@ -204,68 +265,104 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 		return nil, errRedisInter
 	}
 
-	profiles := make([]*pb.Profile, 0, len(ids))
+	if len(interIds) == 0 {
+		interIds = append(interIds, "")
+	}
+
+	profiles := make([]*pb.Profile, len(ids))
+
+	size := len(ids)
+
+	eg := new(errgroup.Group)
 
 	interIndex := 0
-	for _, id := range ids {
-		var username string
-		var followCnt, followerCnt int64
+	for i := 0; i < size; i++ {
+		i := i
+		id := ids[i]
 
-		err = mr.Finish(
-			func() error {
+		var isFollow bool
+
+		if ids[i] == interIds[interIndex] {
+			isFollow = true
+			interIndex++
+		}
+
+		eg.Go(func() error {
+			wg := sync.WaitGroup{}
+
+			var username string
+
+			wg.Add(1)
+			go func() {
 				err = m.db.WithContext(ctx).
 					Table(entity.TableNameUserSubject).
 					Select("`username`").
 					Where("`id` = ?", id).
 					Take(&username).
 					Error
+
+				wg.Done()
+			}()
+
+			var followCnt, followerCnt int64
+			var erx errx.Error
+
+			wg.Add(1)
+			go func() {
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.ZCard(ctx, user.RdbKeyFollow+id)
+					pipe.ZCard(ctx, user.RdbKeyFollower+id)
+
+					return nil
+				})
 				if err != nil {
-					log.Logger.Error(errx.MysqlGet, zap.Error(err))
-					return errMysqlGet
+					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+					erx = errRedisPipeExec
+					return
 				}
 
-				return nil
-			},
-			func() error {
-				followCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
+				followCnt, err = cmds[0].(*redis.IntCmd).Result()
 				if err != nil {
 					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					return errRedisGet
+					erx = errRedisGet
+					return
 				}
 
-				return nil
-			},
-			func() error {
-				followerCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				followerCnt, err = cmds[1].(*redis.IntCmd).Result()
 				if err != nil {
 					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					return errRedisGet
+					erx = errRedisGet
+					return
 				}
 
-				return nil
-			})
-		if err != nil {
-			return nil, errx.New(errx.GetCode(err), err.Error())
-		}
+				wg.Done()
+			}()
 
-		if id == interIds[interIndex] {
-			profiles = append(profiles, &pb.Profile{
+			wg.Wait()
+
+			if err != nil {
+				log.Logger.Error(errx.MysqlGet, zap.Error(err))
+				return errMysqlGet
+			}
+
+			if erx != nil {
+				return erx
+			}
+
+			profiles[i] = &pb.Profile{
 				Id:            cast.ToInt64(id),
 				Name:          username,
 				FollowCount:   followCnt,
 				FollowerCount: followerCnt,
-				IsFollow:      true,
-			})
-			interIndex++
-		} else {
-			profiles = append(profiles, &pb.Profile{
-				Id:            cast.ToInt64(id),
-				Name:          username,
-				FollowCount:   followCnt,
-				FollowerCount: followerCnt,
-				IsFollow:      false,
-			})
-		}
+				IsFollow:      isFollow,
+			}
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, errx.New(errx.GetCode(err), err.Error())
 	}
 
 	return profiles, nil
@@ -289,68 +386,107 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 		return nil, errRedisInter
 	}
 
-	profiles := make([]*pb.Profile, 0, len(friendIds))
+	if len(friendIds) == 0 {
+		friendIds = append(friendIds, "")
+	}
+
+	profiles := make([]*pb.Profile, len(friendIds))
+
+	size := len(friendIds)
+
+	eg := new(errgroup.Group)
 
 	idsLen := len(ids)
 	idsIndex := 0
-	isFollow := false
-	for _, id := range friendIds {
-		for i := idsIndex; i <= idsLen; i++ {
-			if id == ids[i] {
+	for i := 0; i < size; i++ {
+		i := i
+		id := friendIds[i]
+
+		var isFollow bool
+		for j := idsIndex; j <= idsLen; j++ {
+			if friendIds[i] == ids[j] {
 				isFollow = true
-				idsIndex = i + 1
+				idsIndex = j + 1
+				break
 			}
 		}
 
-		var username string
-		var followCnt, followerCnt int64
+		eg.Go(func() error {
+			wg := sync.WaitGroup{}
 
-		err = mr.Finish(
-			func() error {
+			var username string
+
+			wg.Add(1)
+			go func() {
 				err = m.db.WithContext(ctx).
 					Table(entity.TableNameUserSubject).
 					Select("`username`").
 					Where("`id` = ?", id).
 					Take(&username).
 					Error
+
+				wg.Done()
+			}()
+
+			var followCnt, followerCnt int64
+			var erx errx.Error
+
+			wg.Add(1)
+			go func() {
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.ZCard(ctx, user.RdbKeyFollow+id)
+					pipe.ZCard(ctx, user.RdbKeyFollower+id)
+
+					return nil
+				})
 				if err != nil {
-					log.Logger.Error(errx.MysqlGet, zap.Error(err))
-					return errMysqlGet
+					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+					erx = errRedisPipeExec
+					return
 				}
 
-				return nil
-			},
-			func() error {
-				followCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollow+id).Result()
+				followCnt, err = cmds[0].(*redis.IntCmd).Result()
 				if err != nil {
 					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					return errRedisGet
+					erx = errRedisGet
+					return
 				}
 
-				return nil
-			},
-			func() error {
-				followerCnt, err = m.rdb.ZCard(ctx, user.RdbKeyFollower+id).Result()
+				followerCnt, err = cmds[1].(*redis.IntCmd).Result()
 				if err != nil {
 					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					return errRedisGet
+					erx = errRedisGet
+					return
 				}
 
-				return nil
-			})
-		if err != nil {
-			return nil, errx.New(errx.GetCode(err), err.Error())
-		}
+				wg.Done()
+			}()
 
-		profiles = append(profiles, &pb.Profile{
-			Id:            cast.ToInt64(id),
-			Name:          username,
-			FollowCount:   followCnt,
-			FollowerCount: followerCnt,
-			IsFollow:      isFollow,
+			wg.Wait()
+
+			if err != nil {
+				log.Logger.Error(errx.MysqlGet, zap.Error(err))
+				return errMysqlGet
+			}
+
+			if erx != nil {
+				return erx
+			}
+
+			profiles[i] = &pb.Profile{
+				Id:            cast.ToInt64(id),
+				Name:          username,
+				FollowCount:   followCnt,
+				FollowerCount: followerCnt,
+				IsFollow:      isFollow,
+			}
+
+			return nil
 		})
+	}
 
-		isFollow = false
+	if err := eg.Wait(); err != nil {
+		return nil, errx.New(errx.GetCode(err), err.Error())
 	}
 
 	return profiles, nil

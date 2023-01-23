@@ -40,7 +40,7 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 	err := mr.Finish(func() error {
 		err := m.db.WithContext(ctx).
 			Select("`id`, `username`").
-			Where("`id` = ?").
+			Where("`id` = ?", dstUserId).
 			Take(userSubject).
 			Error
 		if err != nil {

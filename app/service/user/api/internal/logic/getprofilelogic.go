@@ -93,7 +93,7 @@ func (l *GetProfileLogic) GetProfile(req *types.GetProfileReq) (resp *types.GetP
 	return &types.GetProfileRes{
 		StatusCode: 0,
 		StatusMsg:  "get profile successfully",
-		User: types.Profile{
+		User: &types.Profile{
 			Id:            rpcRes.User.Id,
 			Name:          rpcRes.User.Name,
 			FollowCount:   rpcRes.User.FollowCount,

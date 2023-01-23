@@ -82,26 +82,23 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 
 	var videoId, commentId int64
 
-	switch actionType {
-	case 1:
-		videoId, err = strconv.ParseInt(req.VideoId, 10, 64)
-		if err != nil {
-			return &types.CommentRes{
-				StatusCode: errx.Encode(
-					errx.Logic,
-					sys.SysId,
-					douyin.Api,
-					sys.ServiceIdApi,
-					consts.ErrIdLogicCrud,
-					crud.ErrIdOprComment,
-					crud.ErrIdParseInt,
-				),
-				StatusMsg: crud.ErrParseInt,
-			}, nil
-		}
+	videoId, err = strconv.ParseInt(req.VideoId, 10, 64)
+	if err != nil {
+		return &types.CommentRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicCrud,
+				crud.ErrIdOprComment,
+				crud.ErrIdParseInt,
+			),
+			StatusMsg: crud.ErrParseInt,
+		}, nil
+	}
 
-	case 2:
-
+	if actionType == 2 {
 		commentId, err = strconv.ParseInt(req.CommentId, 10, 64)
 		if err != nil {
 			return &types.CommentRes{

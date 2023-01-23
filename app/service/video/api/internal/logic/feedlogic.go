@@ -33,20 +33,25 @@ func NewFeedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *FeedLogic {
 }
 
 func (l *FeedLogic) Feed(requ *types.FeedReq) (resp *types.FeedRes, err error) {
-	latestTime, err := strconv.ParseInt(requ.LastestTime, 10, 64)
-	if err != nil {
-		return &types.FeedRes{
-			StatusCode: errx.Encode(
-				errx.Logic,
-				sys.SysId,
-				douyin.Api,
-				sys.ServiceIdApi,
-				consts.ErrIdLogicInfo,
-				info.ErrIdOprFeed,
-				info.ErrIdParseInt,
-			),
-			StatusMsg: info.ErrParseInt,
-		}, nil
+	var latestTime int64
+	if requ.LastestTime == "" {
+		latestTime = 0
+	} else {
+		latestTime, err = strconv.ParseInt(requ.LastestTime, 10, 64)
+		if err != nil {
+			return &types.FeedRes{
+				StatusCode: errx.Encode(
+					errx.Logic,
+					sys.SysId,
+					douyin.Api,
+					sys.ServiceIdApi,
+					consts.ErrIdLogicInfo,
+					info.ErrIdOprFeed,
+					info.ErrIdParseInt,
+				),
+				StatusMsg: info.ErrParseInt,
+			}, nil
+		}
 	}
 
 	var userId int64

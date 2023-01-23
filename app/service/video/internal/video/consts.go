@@ -7,5 +7,5 @@ const (
 
 	RdbKeyFavorite    = RdbKey + "favorite:"
 	RdbKeyFavoriteCnt = RdbKey + "favorite_cnt:"
-	RdbKeyCommentCnt  = RdbKey + "comment_cnt"
+	RdbKeyCommentCnt  = RdbKey + "comment_cnt:"
 )

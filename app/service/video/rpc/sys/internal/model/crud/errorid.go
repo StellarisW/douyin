@@ -14,6 +14,7 @@ const (
 	ErrIdMysqlInsert = iota
 	ErrIdMinioPut
 	ErrIdRedisAdd
+	ErrIdRedisGet
 	ErrIdRedisIncr
 	ErrIdRedisRem
 	ErrIdRedisDecr
@@ -30,9 +31,21 @@ const (
 // Publish 操作
 
 const (
-	ErrIdInvalidContentType = iota + ErrIdOprComment
+	ErrIdInvalidContentType = iota + ErrIdCommon
 )
 
 const (
 	ErrInvalidContentType = "invalid content type"
+)
+
+// Favorite 操作
+
+const (
+	ErrIdAlreadyLike = iota + ErrIdCommon
+	ErrIdAlreadyDisLike
+)
+
+const (
+	ErrAlreadyLike    = "already liked"
+	ErrAlreadyDisLike = "already disliked"
 )

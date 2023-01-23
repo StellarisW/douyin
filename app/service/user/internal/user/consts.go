@@ -3,8 +3,9 @@ package user
 import "douyin/app/service/user/internal/sys"
 
 const (
-	RdbKey = sys.SysName + ":"
+	RdbKey         = sys.SysName + ":"
+	RdbKeyRelation = RdbKey + "relation:"
 
-	RdbKeyFollow   = RdbKey + "follow:"
-	RdbKeyFollower = RdbKey + "follower:"
+	RdbKeyFollow   = "{" + RdbKeyRelation + "}follow:"
+	RdbKeyFollower = "{" + RdbKeyRelation + "}follower:"
 )

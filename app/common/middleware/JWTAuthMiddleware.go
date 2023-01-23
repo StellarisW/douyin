@@ -64,7 +64,7 @@ func (m *JWTAuthMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
 
 		readTokenResJson := gjson.Parse(readTokenRes.String())
 
-		if readTokenResJson.Get("code").Uint() != 0 {
+		if readTokenResJson.Get("status_code").Uint() != 0 {
 			response.Fail(
 				w,
 				http.StatusUnauthorized,
@@ -77,7 +77,7 @@ func (m *JWTAuthMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
 					0,
 					errIdInvalidToken,
 				),
-				readTokenResJson.Get("msg").String(),
+				readTokenResJson.Get("status_msg").String(),
 			)
 			return
 		} else {

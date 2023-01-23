@@ -31,7 +31,7 @@ func NewFavoriteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Favorite
 func (l *FavoriteLogic) Favorite(in *pb.FavoriteReq) (*pb.FavoriteRes, error) {
 	erx := l.svcCtx.CrudModel.Favorite(l.ctx, in.UserId, in.VideoId, in.ActionType)
 	if erx != nil {
-		if erx.Code() == crud.ErrIdInvalidActionType {
+		if erx.Code() == crud.ErrIdInvalidActionType || erx.Code() == crud.ErrIdAlreadyLike || erx.Code() == crud.ErrIdAlreadyDisLike {
 			return &pb.FavoriteRes{
 				StatusCode: errx.Encode(
 					errx.Logic,
@@ -40,9 +40,9 @@ func (l *FavoriteLogic) Favorite(in *pb.FavoriteReq) (*pb.FavoriteRes, error) {
 					sys.ServiceIdRpcSys,
 					consts.ErrIdLogicCrud,
 					crud.ErrIdOprFavorite,
-					crud.ErrIdInvalidActionType,
+					erx.Code(),
 				),
-				StatusMsg: crud.ErrInvalidContentType,
+				StatusMsg: erx.Error(),
 			}, nil
 		}
 		return &pb.FavoriteRes{

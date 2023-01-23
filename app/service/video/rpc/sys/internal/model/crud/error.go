@@ -8,6 +8,7 @@ var (
 	errMysqlInsert       = errx.New(ErrIdMysqlInsert, errx.MysqlInsert)
 	errMinioPut          = errx.New(ErrIdMinioPut, errx.MinioPut)
 	errRedisAdd          = errx.New(ErrIdRedisAdd, errx.RedisAdd)
+	errRedisGet          = errx.New(ErrIdRedisGet, errx.RedisGet)
 	errRedisIncr         = errx.New(ErrIdRedisIncr, errx.RedisIncr)
 	errRedisRem          = errx.New(ErrIdRedisRem, errx.RedisRem)
 	errRedisDecr         = errx.New(ErrIdRedisDecr, errx.RedisDecr)
@@ -20,4 +21,10 @@ var (
 	// Publish 操作
 
 	errInvalidContentType = errx.New(ErrIdInvalidContentType, ErrInvalidContentType)
+)
+
+var (
+	// Favorite 操作
+	errAlreadyLike    = errx.New(ErrIdAlreadyLike, ErrAlreadyLike)
+	errAlreadyDislike = errx.New(ErrIdAlreadyDisLike, ErrAlreadyDisLike)
 )

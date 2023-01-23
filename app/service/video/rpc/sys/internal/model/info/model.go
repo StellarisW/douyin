@@ -107,8 +107,9 @@ func (m *DefaultModel) GetFavoriteList(ctx context.Context, srcUserId, dstUserId
 	videoSubjects := make([]*entity.VideoSubject, 0)
 
 	err = m.db.WithContext(ctx).
+		Table(entity.TableNameVideoSubject).
 		Where(" `id` IN ?", videoIds).
-		Find(&videoIds).
+		Find(&videoSubjects).
 		Error
 	if err != nil {
 		log.Logger.Error(errx.MysqlGet, zap.Error(err))
@@ -167,7 +168,7 @@ func (m *DefaultModel) GetCommentList(ctx context.Context, userId, videoId int64
 					IsFollow:      rpcRes.User.IsFollow,
 				},
 				Content:    commentSubjects[i].CommentText,
-				CreateDate: commentSubjects[i].CreateTime.Format("06-01"),
+				CreateDate: commentSubjects[i].CreateTime.Format("01-02"),
 			}
 
 			return nil
@@ -197,12 +198,11 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 
 			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				rpcRes, _ = m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
 					SrcUserId: srcUserId,
 					DstUserId: videoSubjects[i].UserID,
 				})
-
-				wg.Done()
 			}()
 
 			var favoriteCount, commentCount int64
@@ -211,6 +211,7 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 
 			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 					pipe.Get(ctx,
 						fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
@@ -227,23 +228,29 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 					return nil
 				})
 				if err != nil {
-					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
-					erx = errRedisPipeExec
-					return
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+						erx = errRedisPipeExec
+						return
+					}
 				}
 
 				favoriteCount, err = cmds[0].(*redis.StringCmd).Int64()
 				if err != nil {
-					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					erx = errRedisGet
-					return
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisGet, zap.Error(err))
+						erx = errRedisGet
+						return
+					}
 				}
 
 				commentCount, err = cmds[1].(*redis.StringCmd).Int64()
 				if err != nil {
-					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					erx = errRedisGet
-					return
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisGet, zap.Error(err))
+						erx = errRedisGet
+						return
+					}
 				}
 
 				_, err = cmds[2].(*redis.IntCmd).Result()
@@ -256,8 +263,6 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 				} else {
 					isFavorite = true
 				}
-
-				wg.Done()
 			}()
 
 			wg.Wait()

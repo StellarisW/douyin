@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -90,6 +91,18 @@ func (m *DefaultModel) Favorite(ctx context.Context, userId, videoId int64, acti
 	case 1:
 		// 点赞
 
+		_, err := m.rdb.ZRank(ctx,
+			fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId),
+			strconv.FormatInt(videoId, 10)).Result()
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisGet, zap.Error(err))
+				return errRedisGet
+			}
+		} else {
+			return errAlreadyLike
+		}
+
 		now := time.Now()
 
 		cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
@@ -122,6 +135,17 @@ func (m *DefaultModel) Favorite(ctx context.Context, userId, videoId int64, acti
 		return nil
 	case 2:
 		// 取消点赞
+
+		_, err := m.rdb.ZRank(ctx,
+			fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId),
+			strconv.FormatInt(videoId, 10)).Result()
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisGet, zap.Error(err))
+				return errRedisGet
+			}
+			return errAlreadyDislike
+		}
 
 		cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 			pipe.ZRem(ctx,
@@ -189,7 +213,7 @@ func (m *DefaultModel) Comment(ctx context.Context, userId, videoId int64, actio
 		// 删除评论
 
 		err := m.db.WithContext(ctx).
-			Where("`id` = ? `user_id` = ?", commentId, userId).
+			Where("`id` = ? AND `user_id` = ?", commentId, userId).
 			Delete(&entity.CommentSubject{}).
 			Error
 		if err != nil {
