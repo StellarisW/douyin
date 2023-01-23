@@ -74,7 +74,7 @@ func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string, 
 	buffer := bytes.NewBuffer(data)
 
 	go func() {
-		_, err = m.minioClient.PutObject(ctx,
+		_, err = m.minioClient.PutObject(context.Background(),
 			douyin.MinioBucket,
 			fmt.Sprintf("video/%d/video", videoId),
 			buffer,
@@ -84,7 +84,7 @@ func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string, 
 			},
 		)
 		if err != nil {
-			m.db.WithContext(ctx).
+			m.db.WithContext(context.Background()).
 				Delete(videoSubject)
 			log.Logger.Error(errx.MinioPut, zap.Error(err))
 			return
