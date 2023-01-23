@@ -62,6 +62,8 @@ func main() {
 		}
 	})
 
+	s.AddOptions(grpc.MaxRecvMsgSize(256 << 20))
+
 	// 注册服务到consul
 	_ = consul.RegisterService(c.ListenOn, c.Consul)
 
