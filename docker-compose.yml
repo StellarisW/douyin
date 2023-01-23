@@ -119,7 +119,7 @@ services:
   douyin-video-rpc-sys:
     depends_on:
       - douyin-user-rpc-sys
-    image: ${REGISTRY_URL}/douyin/dormitory-rpc-sys
+    image: ${REGISTRY_URL}/douyin/video-rpc-sys
     environment:
       - DOUYIN_MODE=${DOUYIN_MODE}
       - APOLLO_APP_ID=${APOLLO_APP_ID}
