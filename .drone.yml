@@ -1,0 +1,107 @@
+kind: pipeline # 定义对象类型，还有secret和signature两种类型
+type: docker # 定义流水线类型，还有kubernetes、exec、ssh等类型
+name: douyin # 定义流水线名称
+
+trigger:
+  branch:
+    - master
+    - dev
+  event:
+    - push
+    - pull_request
+    - tag
+    - promote
+
+clone:
+  retries: 3
+
+# 定义流水线宿主机挂载目录，用于共享数据
+#volumes:
+#  - name: go_cache
+#    host:
+#      path: /usr/lib/go
+#  - name: build_cache
+#    temp: {}
+
+steps: # 定义流水线执行步骤，这些步骤将顺序执行
+
+  # 方式一:
+  #   将仓库打包发送给目标主机,目标主机然后构建镜像
+  - name: push
+    image: appleboy/drone-scp # SSH工具镜像
+    # 参数说明: https://plugins.drone.io/plugins/scp
+    settings:
+      host:
+        from_secret: SSH_IP # 远程连接地址
+      port:
+        from_secret: SSH_PORT # 远程连接端口
+      username:
+        from_secret: SSH_USERNAME # 远程连接账号
+      password:
+        from_secret: SSH_PASSWORD # 从Secret中读取SSH密码
+      tar_tmp_path: /tmp/tar
+      overwrite: true
+      rm: true
+      source:
+        - .
+      target: /www/service/douyin
+
+  # 运行镜像
+  - name: run
+    image: appleboy/drone-ssh # SSH工具镜像
+    #     从drone中提取secret到环境变量中
+    environment:
+      APOLLO_APP_ID:
+        from_secret: APOLLO_APP_ID
+      APOLLO_CLUSTER_NAME:
+        from_secret: APOLLO_CLUSTER_NAME
+      APOLLO_IP:
+        from_secret: APOLLO_IP
+      APOLLO_SECRET:
+        from_secret: APOLLO_SECRET
+      REGISTRY_URL:
+        from_secret: REGISTRY_URL
+      DOUYIN_MODE:
+        from_secret: DOUYIN_MODE
+
+    # 参数说明: https://plugins.drone.io/plugins/ssh
+    settings:
+      host:
+        from_secret: SSH_IP # 远程连接地址
+      port:
+        from_secret: SSH_PORT # 远程连接端口
+      username:
+        from_secret: SSH_USERNAME # 远程连接账号
+      password:
+        from_secret: SSH_PASSWORD # 从Secret中读取SSH密码
+      command_timeout: 60m # 远程执行命令超时时间
+      envs:
+        - APOLLO_APP_ID
+        - APOLLO_CLUSTER_NAME
+        - APOLLO_IP
+        - APOLLO_SECRET
+        - REGISTRY_URL
+        - DOUYIN_MODE
+
+      script:
+        - zsh
+        - source ~/.zshrc
+        - cd /www/service/douyin
+        - ls
+
+        - echo '----------export envs----------'
+        - export DOUYIN_MODE=$DOUYIN_MODE
+        - export APOLLO_APP_ID=$APOLLO_APP_ID
+        - export APOLLO_CLUSTER_NAME=$APOLLO_CLUSTER_NAME
+        - export APOLLO_IP=$APOLLO_IP
+        - export APOLLO_SECRET=$APOLLO_SECRET
+        - export REGISTRY_URL=$REGISTRY_URL
+        - env
+        - echo '----------complete----------'
+
+        - echo '----------build docker image----------'
+        - chmod 775 ./build.sh
+        - ./build.sh douyin $REGISTRY_URL 5
+        - echo '----------complete----------'
+        - docker stack deploy --with-registry-auth -c docker-compose.yml douyin
+        - echo '----------complete----------'

@@ -1,0 +1,189 @@
+version: '3.7'
+
+services:
+  douyin-auth-api:
+    depends_on:
+      - douyin-auth-rpc-token-enhancer
+    image: ${REGISTRY_URL}/douyin/auth-api
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik
+        - traefik.http.routers.douyin-auth-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/token`)
+        - traefik.http.routers.douyin-auth-api.tls.certResolver=le
+        - traefik.http.services.douyin-auth-api.loadbalancer.server.port=11120
+
+  douyin-auth-rpc-token-enhancer:
+    depends_on:
+      - douyin-auth-rpc-token-store
+    image: ${REGISTRY_URL}/douyin/auth-rpc-token-enhancer
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+
+  douyin-auth-rpc-token-store:
+    image: ${REGISTRY_URL}/douyin/auth-rpc-token-store
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+
+  douyin-user-api:
+    depends_on:
+      - douyin-user-rpc-sys
+    image: ${REGISTRY_URL}/douyin/user-api
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik
+        - traefik.http.routers.douyin-user-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/user`,`/douyin/relation`)
+        - traefik.http.routers.douyin-user-api.tls.certResolver=le
+        - traefik.http.services.douyin-user-api.loadbalancer.server.port=11130
+
+  douyin-user-rpc-sys:
+    image: ${REGISTRY_URL}/douyin/user-rpc-sys
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+
+  douyin-video-api:
+    depends_on:
+      - douyin-video-rpc-sys
+    image: ${REGISTRY_URL}/douyin/video-api
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik
+        - traefik.http.routers.douyin-dormitory-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/feed`,`/douyin/publish`,`/douyin/favorite`,/douyin/comment`)
+        - traefik.http.routers.douyin-dormitory-api.tls.certResolver=le
+        - traefik.http.services.douyin-dormitory-api.loadbalancer.server.port=11150
+  douyin-video-rpc-sys:
+    depends_on:
+      - douyin-user-rpc-sys
+    image: ${REGISTRY_URL}/douyin/dormitory-rpc-sys
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+
+  douyin-chat-api:
+    depends_on:
+      - douyin-char-rpc-sys
+    image: ${REGISTRY_URL}/douyin/chat-api
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik
+        - traefik.http.routers.douyin-jwzx-api.rule=Host(`douyin.stellaris.wang`) && PathPrefix(`/douyin/message`)
+        - traefik.http.routers.douyin-jwzx-api.tls.certResolver=le
+        - traefik.http.services.douyin-jwzx-api.loadbalancer.server.port=11140
+
+  douyin-chat-rpc-sys:
+    image: ${REGISTRY_URL}/douyin/chat-rpc-sys
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+
+  douyin-mq-nsq-consumer:
+    depends_on:
+      - douyin-chat-rpc-sys
+    image: ${REGISTRY_URL}/douyin/mq-nsq-consumer
+    environment:
+      - DOUYIN_MODE=${DOUYIN_MODE}
+      - APOLLO_APP_ID=${APOLLO_APP_ID}
+      - APOLLO_CLUSTER_NAME=${APOLLO_CLUSTER_NAME}
+      - APOLLO_IP=${APOLLO_IP}
+      - APOLLO_SECRET=${APOLLO_SECRET}
+    networks:
+      - traefik
+    deploy:
+      mode: replicated
+
+networks:
+  traefik:
+    external: true
