@@ -23,7 +23,7 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.PublishReq
 
-		if err := httpx.Parse(r, &req); err != nil {
+		if err := r.ParseForm(); err != nil {
 			log.Logger.Error(errx.ParseHttpRequest, zap.Error(err), zap.Reflect("request", r))
 			response.Fail(
 				w,
@@ -41,6 +41,31 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			)
 			return
 		}
+
+		if err := r.ParseMultipartForm(256 << 20); err != nil {
+			if err != http.ErrNotMultipart {
+				log.Logger.Error(errx.ParseHttpRequest, zap.Error(err), zap.Reflect("request", r))
+				response.Fail(
+					w,
+					http.StatusBadRequest,
+					errx.Encode(
+						errx.Logic,
+						sys.SysId,
+						douyin.Api,
+						sys.ServiceIdApi,
+						consts.ErrIdLogicCrud,
+						crud.ErrIdOprPublish,
+						0,
+					),
+					err.Error(),
+				)
+				return
+			}
+		}
+
+		req.Token = r.Form.Get("token")
+		req.Title = r.Form.Get("title")
+
 		log.Logger.Debug("recv:", zap.Reflect("args", req))
 
 		l := logic.NewPublishLogic(r.Context(), svcCtx)

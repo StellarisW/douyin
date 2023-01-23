@@ -42,7 +42,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 				c.SysRpcClientConf,
 				zrpc.WithDialOption(
 					grpc.WithDefaultCallOptions(
-						grpc.MaxCallRecvMsgSize(1<<18), // 最大上传 256MB 视频
+						grpc.MaxCallRecvMsgSize(256<<32), // 最大上传 256MB 视频
 					),
 				),
 			),
