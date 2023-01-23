@@ -42,9 +42,9 @@ type (
 		Token  string `form:"token"`
 	}
 	GetProfileRes {
-		StatusCode uint32  `json:"status_code"`
-		StatusMsg  string  `json:"status_msg"`
-		User       Profile `json:"user"`
+		StatusCode uint32   `json:"status_code"`
+		StatusMsg  string   `json:"status_msg"`
+		User       *Profile `json:"user,omitempty"`
 	}
 )
 
@@ -68,7 +68,7 @@ type (
 	GetFollowListRes {
 		StatusCode uint32      `json:"status_code"`
 		StatusMsg  string      `json:"status_msg"`
-		UserList   interface{} `json:"user_list"`
+		UserList   interface{} `json:"user_list,omitempty"`
 	}
 )
 
@@ -80,7 +80,7 @@ type (
 	GetFollowerListRes {
 		StatusCode uint32      `json:"status_code"`
 		StatusMsg  string      `json:"status_msg"`
-		UserList   interface{} `json:"user_list"`
+		UserList   interface{} `json:"user_list,omitempty"`
 	}
 )
 
@@ -92,7 +92,7 @@ type (
 	GetFriendListRes {
 		StatusCode uint32      `json:"status_code"`
 		StatusMsg  string      `json:"status_msg"`
-		UserList   interface{} `json:"user_list"`
+		UserList   interface{} `json:"user_list,omitempty"`
 	}
 )
 

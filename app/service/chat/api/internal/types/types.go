@@ -27,5 +27,5 @@ type GetMessageListReq struct {
 type GetMessageListRes struct {
 	StatusCode  uint32      `json:"status_code"`
 	StatusMsg   string      `json:"status_msg"`
-	MessageList interface{} `json:"message_list,optional"`
+	MessageList interface{} `json:"message_list,omitempty"`
 }

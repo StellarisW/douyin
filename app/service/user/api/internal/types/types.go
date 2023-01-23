@@ -39,9 +39,9 @@ type GetProfileReq struct {
 }
 
 type GetProfileRes struct {
-	StatusCode uint32  `json:"status_code"`
-	StatusMsg  string  `json:"status_msg"`
-	User       Profile `json:"user"`
+	StatusCode uint32   `json:"status_code"`
+	StatusMsg  string   `json:"status_msg"`
+	User       *Profile `json:"user,omitempty"`
 }
 
 type RelationReq struct {
@@ -63,7 +63,7 @@ type GetFollowListReq struct {
 type GetFollowListRes struct {
 	StatusCode uint32      `json:"status_code"`
 	StatusMsg  string      `json:"status_msg"`
-	UserList   interface{} `json:"user_list"`
+	UserList   interface{} `json:"user_list,omitempty"`
 }
 
 type GetFollowerListReq struct {
@@ -74,7 +74,7 @@ type GetFollowerListReq struct {
 type GetFollowerListRes struct {
 	StatusCode uint32      `json:"status_code"`
 	StatusMsg  string      `json:"status_msg"`
-	UserList   interface{} `json:"user_list"`
+	UserList   interface{} `json:"user_list,omitempty"`
 }
 
 type GetFriendListReq struct {
@@ -85,5 +85,5 @@ type GetFriendListReq struct {
 type GetFriendListRes struct {
 	StatusCode uint32      `json:"status_code"`
 	StatusMsg  string      `json:"status_msg"`
-	UserList   interface{} `json:"user_list"`
+	UserList   interface{} `json:"user_list,omitempty"`
 }

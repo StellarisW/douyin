@@ -35,8 +35,8 @@ type FeedReq struct {
 type FeedRes struct {
 	StatusCode uint32      `json:"status_code"`
 	StatusMsg  string      `json:"status_msg"`
-	NextTime   int64       `json:"next_time,optional"`
-	VideoList  interface{} `json:"video_list,optional"`
+	NextTime   int64       `json:"next_time,omitempty"`
+	VideoList  interface{} `json:"video_list,omitempty"`
 }
 
 type PublishReq struct {
@@ -57,7 +57,7 @@ type GetPublishListReq struct {
 type GetPublishListRes struct {
 	StatusCode uint32      `json:"status_code"`
 	StatusMsg  string      `json:"status_msg"`
-	VideoList  interface{} `json:"video_list,optional"`
+	VideoList  interface{} `json:"video_list,omitempty"`
 }
 
 type FavoriteReq struct {
@@ -79,7 +79,7 @@ type GetFavoriteListReq struct {
 type GetFavoriteListRes struct {
 	StatusCode uint32      `json:"status_code"`
 	StatusMsg  string      `json:"status_msg"`
-	VideoList  interface{} `json:"video_list,optional"`
+	VideoList  interface{} `json:"video_list,omitempty"`
 }
 
 type CommentReq struct {
@@ -93,7 +93,7 @@ type CommentReq struct {
 type CommentRes struct {
 	StatusCode uint32      `json:"status_code"`
 	StatusMsg  string      `json:"status_msg"`
-	Comment    interface{} `json:"comment,optional"`
+	Comment    interface{} `json:"comment,omitempty"`
 }
 
 type GetCommentListReq struct {
@@ -104,5 +104,5 @@ type GetCommentListReq struct {
 type GetCommentListRes struct {
 	StatusCode  uint32      `json:"status_code"`
 	StatusMsg   string      `json:"status_msg"`
-	CommentList interface{} `json:"comment_list,optional"`
+	CommentList interface{} `json:"comment_list,omitempty"`
 }
