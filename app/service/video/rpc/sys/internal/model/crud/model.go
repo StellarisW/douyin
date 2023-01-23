@@ -51,14 +51,16 @@ func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string, 
 	playUrl := fmt.Sprintf("%s/%s/video/%d/video", douyin.MinioDomain, douyin.MinioBucket, videoId)
 	coverUrl := defaultVideoCoverUrl
 
+	videoSubject := &entity.VideoSubject{
+		ID:       videoId,
+		UserID:   userId,
+		PlayURL:  playUrl,
+		CoverURL: coverUrl,
+		Title:    title,
+	}
+
 	err := m.db.WithContext(ctx).
-		Create(&entity.VideoSubject{
-			ID:       videoId,
-			UserID:   userId,
-			PlayURL:  playUrl,
-			CoverURL: coverUrl,
-			Title:    title,
-		}).Error
+		Create(videoSubject).Error
 	if err != nil {
 		log.Logger.Error(errx.MysqlInsert, zap.Error(err))
 		return errMysqlInsert
@@ -71,17 +73,23 @@ func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string, 
 
 	buffer := bytes.NewBuffer(data)
 
-	_, err = m.minioClient.PutObject(ctx,
-		douyin.MinioBucket,
-		fmt.Sprintf("video/%d/video", videoId),
-		buffer,
-		int64(buffer.Len()),
-		minio.PutObjectOptions{ContentType: contentType},
-	)
-	if err != nil {
-		log.Logger.Error(errx.MinioPut, zap.Error(err))
-		return errMinioPut
-	}
+	go func() {
+		_, err = m.minioClient.PutObject(ctx,
+			douyin.MinioBucket,
+			fmt.Sprintf("video/%d/video", videoId),
+			buffer,
+			int64(buffer.Len()),
+			minio.PutObjectOptions{
+				ContentType: contentType,
+			},
+		)
+		if err != nil {
+			m.db.WithContext(ctx).
+				Delete(videoSubject)
+			log.Logger.Error(errx.MinioPut, zap.Error(err))
+			return
+		}
+	}()
 
 	return nil
 }

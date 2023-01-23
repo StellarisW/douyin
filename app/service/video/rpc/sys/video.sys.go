@@ -4,14 +4,13 @@ import (
 	apollo "douyin/app/common/config"
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
-	"douyin/utils"
-	"github.com/zeromicro/go-zero/core/logx"
-	"go.uber.org/zap"
-
 	"douyin/app/service/video/rpc/sys/internal/config"
 	"douyin/app/service/video/rpc/sys/internal/server"
 	"douyin/app/service/video/rpc/sys/internal/svc"
 	"douyin/app/service/video/rpc/sys/pb"
+	"douyin/utils"
+	"github.com/zeromicro/go-zero/core/logx"
+	"go.uber.org/zap"
 
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
