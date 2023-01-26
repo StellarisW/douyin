@@ -6,10 +6,12 @@ import (
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
 	"douyin/app/common/middleware"
+	"douyin/app/common/mq/nsq"
+	"douyin/app/service/mq/nsq/producer/video"
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
-	"douyin/app/service/video/rpc/sys/pb"
+	"go.uber.org/zap"
 	"strconv"
 
 	"douyin/app/service/video/api/internal/svc"
@@ -96,13 +98,9 @@ func (l *FavoriteLogic) Favorite(req *types.FavoriteReq) (resp *types.FavoriteRe
 		}, nil
 	}
 
-	rpcRes, _ := l.svcCtx.SysRpcClient.Favorite(l.ctx, &pb.FavoriteReq{
-		UserId:     userId,
-		VideoId:    videoId,
-		ActionType: uint32(actionType),
-	})
-	if rpcRes == nil {
-		log.Logger.Error(errx.RequestRpcReceive)
+	producer, err := nsq.GetProducer()
+	if err != nil {
+		log.Logger.Error(errx.GetNsqProducer)
 		return &types.FavoriteRes{
 			StatusCode: errx.Encode(
 				errx.Sys,
@@ -111,14 +109,30 @@ func (l *FavoriteLogic) Favorite(req *types.FavoriteReq) (resp *types.FavoriteRe
 				sys.ServiceIdApi,
 				consts.ErrIdLogicCrud,
 				crud.ErrIdOprFavorite,
-				crud.ErrIdRequestRpcReceiveSys,
+				crud.ErrIdGetNsqProducer,
 			),
 			StatusMsg: errx.Internal,
 		}, nil
-	} else if rpcRes.StatusCode != 0 {
+	}
+
+	err = video.Favorite(producer, video.FavoriteMessage{
+		UserId:     userId,
+		VideoId:    videoId,
+		ActionType: uint32(actionType),
+	})
+	if err != nil {
+		log.Logger.Error(errx.NsqPublish, zap.Error(err))
 		return &types.FavoriteRes{
-			StatusCode: rpcRes.StatusCode,
-			StatusMsg:  rpcRes.StatusMsg,
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Rpc,
+				sys.ServiceIdRpcSys,
+				consts.ErrIdLogicCrud,
+				crud.ErrIdOprFavorite,
+				crud.ErrIdNsqPublish,
+			),
+			StatusMsg: errx.Internal,
 		}, nil
 	}
 

@@ -14,6 +14,8 @@ const (
 	ErrIdRequestRpcReceiveSys = iota + 1
 	ErrIdParseInt
 	ErrIdInvalidActionType
+	ErrIdGetNsqProducer
+	ErrIdNsqPublish
 	ErrIdCommon
 )
 

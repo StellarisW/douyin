@@ -14,6 +14,8 @@ const (
 const (
 	ErrIdRequestRpcReceiveSys = iota + 1
 	ErrIdParseInt
+	ErrIdGetNsqProducer
+	ErrIdNsqPublish
 	ErrIdCommon
 )
 

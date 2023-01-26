@@ -6,10 +6,12 @@ import (
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
 	"douyin/app/common/middleware"
+	"douyin/app/common/mq/nsq"
+	"douyin/app/service/mq/nsq/producer/video"
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
-	"douyin/app/service/video/rpc/sys/pb"
+	"go.uber.org/zap"
 	"strconv"
 
 	"douyin/app/service/video/api/internal/svc"
@@ -116,15 +118,9 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		}
 	}
 
-	rpcRes, _ := l.svcCtx.SysRpcClient.Comment(l.ctx, &pb.CommentReq{
-		UserId:      userId,
-		VideoId:     videoId,
-		ActionType:  uint32(actionType),
-		CommentText: l.svcCtx.Filter.GetFilter().Replace(req.CommentText, '*'),
-		CommentId:   commentId,
-	})
-	if rpcRes == nil {
-		log.Logger.Error(errx.RequestRpcReceive)
+	producer, err := nsq.GetProducer()
+	if err != nil {
+		log.Logger.Error(errx.GetNsqProducer)
 		return &types.CommentRes{
 			StatusCode: errx.Encode(
 				errx.Sys,
@@ -133,14 +129,32 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 				sys.ServiceIdApi,
 				consts.ErrIdLogicCrud,
 				crud.ErrIdOprComment,
-				crud.ErrIdRequestRpcReceiveSys,
+				crud.ErrIdGetNsqProducer,
 			),
 			StatusMsg: errx.Internal,
 		}, nil
-	} else if rpcRes.StatusCode != 0 {
+	}
+
+	err = video.Comment(producer, video.CommentMessage{
+		UserId:      userId,
+		VideoId:     videoId,
+		ActionType:  uint32(actionType),
+		CommentText: l.svcCtx.Filter.GetFilter().Replace(req.CommentText, '*'),
+		CommentId:   commentId,
+	})
+	if err != nil {
+		log.Logger.Error(errx.NsqPublish, zap.Error(err))
 		return &types.CommentRes{
-			StatusCode: rpcRes.StatusCode,
-			StatusMsg:  rpcRes.StatusMsg,
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Rpc,
+				sys.ServiceIdRpcSys,
+				consts.ErrIdLogicCrud,
+				crud.ErrIdOprComment,
+				crud.ErrIdNsqPublish,
+			),
+			StatusMsg: errx.Internal,
 		}, nil
 	}
 

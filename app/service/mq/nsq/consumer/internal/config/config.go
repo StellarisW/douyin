@@ -13,5 +13,7 @@ type ConsumerConf struct {
 type Config struct {
 	service.ServiceConf
 
-	ChatSysRpcClientConf zrpc.RpcClientConf
+	UserSysRpcClientConf  zrpc.RpcClientConf
+	VideoSysRpcClientConf zrpc.RpcClientConf
+	ChatSysRpcClientConf  zrpc.RpcClientConf
 }

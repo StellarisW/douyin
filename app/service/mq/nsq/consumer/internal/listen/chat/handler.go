@@ -29,6 +29,9 @@ func (m *Handler) HandleMessage(nsqMsg *nsq.Message) error {
 			DstUserId: msg.DstUserId,
 			Content:   msg.Content,
 		})
+		if rpcRes == nil {
+			return fmt.Errorf(errx.RequestRpcReceive)
+		}
 		if rpcRes.StatusCode != 0 {
 			return fmt.Errorf("%s, code: %d", rpcRes.StatusMsg, rpcRes.StatusCode)
 		}

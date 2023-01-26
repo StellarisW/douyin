@@ -6,10 +6,12 @@ import (
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
 	"douyin/app/common/middleware"
+	"douyin/app/common/mq/nsq"
+	"douyin/app/service/mq/nsq/producer/user"
 	"douyin/app/service/user/api/internal/consts"
 	"douyin/app/service/user/api/internal/consts/relation"
 	"douyin/app/service/user/internal/sys"
-	"douyin/app/service/user/rpc/sys/pb"
+	"go.uber.org/zap"
 	"strconv"
 
 	"douyin/app/service/user/api/internal/svc"
@@ -111,13 +113,9 @@ func (l *RelationLogic) Relation(req *types.RelationReq) (resp *types.RelationRe
 		}, nil
 	}
 
-	rpcRes, _ := l.svcCtx.SysRpcClient.Relation(l.ctx, &pb.RelationReq{
-		SrcUserId:  userId,
-		DstUserId:  dstUserId,
-		ActionType: uint32(actionType),
-	})
-	if rpcRes == nil {
-		log.Logger.Error(errx.RequestRpcReceive)
+	producer, err := nsq.GetProducer()
+	if err != nil {
+		log.Logger.Error(errx.GetNsqProducer)
 		return &types.RelationRes{
 			StatusCode: errx.Encode(
 				errx.Sys,
@@ -126,14 +124,30 @@ func (l *RelationLogic) Relation(req *types.RelationReq) (resp *types.RelationRe
 				sys.ServiceIdApi,
 				consts.ErrIdLogicRelation,
 				relation.ErrIdOprRelation,
-				relation.ErrIdRequestRpcReceiveSys,
+				relation.ErrIdGetNsqProducer,
 			),
 			StatusMsg: errx.Internal,
 		}, nil
-	} else if rpcRes.StatusCode != 0 {
+	}
+
+	err = user.Relation(producer, user.RelationMessage{
+		SrcUserId:  userId,
+		DstUserId:  dstUserId,
+		ActionType: uint32(actionType),
+	})
+	if err != nil {
+		log.Logger.Error(errx.NsqPublish, zap.Error(err))
 		return &types.RelationRes{
-			StatusCode: rpcRes.StatusCode,
-			StatusMsg:  rpcRes.StatusMsg,
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Rpc,
+				sys.ServiceIdRpcSys,
+				consts.ErrIdLogicRelation,
+				relation.ErrIdOprRelation,
+				relation.ErrIdNsqPublish,
+			),
+			StatusMsg: errx.Internal,
 		}, nil
 	}
 
