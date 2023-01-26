@@ -120,7 +120,7 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		UserId:      userId,
 		VideoId:     videoId,
 		ActionType:  uint32(actionType),
-		CommentText: req.CommentText,
+		CommentText: l.svcCtx.Filter.GetFilter().Replace(req.CommentText, '*'),
 		CommentId:   commentId,
 	})
 	if rpcRes == nil {

@@ -100,7 +100,7 @@ func (l *SendMessageLogic) SendMessage(req *types.SendMessageReq) (resp *types.S
 		SrcUserId:  userId,
 		DstUserId:  dstUserId,
 		ActionType: uint32(actionType),
-		Content:    req.Content,
+		Content:    l.svcCtx.Filter.GetFilter().Replace(req.Content, '*'),
 	})
 	if rpcRes == nil {
 		log.Logger.Error(errx.RequestRpcReceive)
