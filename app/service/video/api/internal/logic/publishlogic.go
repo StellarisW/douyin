@@ -32,7 +32,7 @@ func NewPublishLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PublishLo
 	}
 }
 
-func (l *PublishLogic) Publish(req *types.PublishReq, data []byte) (resp *types.PublishRes, err error) {
+func (l *PublishLogic) Publish(req *types.PublishReq) (resp *types.PublishRes, videoId int64, err error) {
 	userId, err := strconv.ParseInt(l.ctx.Value(middleware.KeyUserId).(string), 10, 64)
 	if err != nil {
 		return &types.PublishRes{
@@ -46,13 +46,12 @@ func (l *PublishLogic) Publish(req *types.PublishReq, data []byte) (resp *types.
 				crud.ErrIdParseInt,
 			),
 			StatusMsg: crud.ErrParseInt,
-		}, nil
+		}, 0, nil
 	}
 
 	rpcRes, _ := l.svcCtx.SysRpcClient.Publish(l.ctx, &pb.PublishReq{
 		UserId: userId,
 		Title:  req.Title,
-		Data:   data,
 	})
 	if rpcRes == nil {
 		log.Logger.Error(errx.RequestRpcReceive)
@@ -67,16 +66,16 @@ func (l *PublishLogic) Publish(req *types.PublishReq, data []byte) (resp *types.
 				crud.ErrIdRequestRpcReceiveSys,
 			),
 			StatusMsg: errx.Internal,
-		}, nil
+		}, 0, nil
 	} else if rpcRes.StatusCode != 0 {
 		return &types.PublishRes{
 			StatusCode: rpcRes.StatusCode,
 			StatusMsg:  rpcRes.StatusMsg,
-		}, nil
+		}, 0, nil
 	}
 
 	return &types.PublishRes{
 		StatusCode: 0,
 		StatusMsg:  "publish successfully",
-	}, nil
+	}, rpcRes.VideoId, nil
 }

@@ -29,7 +29,7 @@ func NewPublishLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PublishLo
 }
 
 func (l *PublishLogic) Publish(in *pb.PublishReq) (*pb.PublishRes, error) {
-	erx := l.svcCtx.CrudModel.Publish(l.ctx, in.UserId, in.Title, in.Data)
+	videoId, erx := l.svcCtx.CrudModel.Publish(l.ctx, in.UserId, in.Title)
 	if erx != nil {
 		if erx.Code() == crud.ErrIdInvalidContentType {
 			return &pb.PublishRes{
@@ -62,5 +62,6 @@ func (l *PublishLogic) Publish(in *pb.PublishReq) (*pb.PublishRes, error) {
 	return &pb.PublishRes{
 		StatusCode: 0,
 		StatusMsg:  "publish successfully",
+		VideoId:    videoId,
 	}, nil
 }

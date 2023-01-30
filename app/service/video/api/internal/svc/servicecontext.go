@@ -2,10 +2,12 @@ package svc
 
 import (
 	apollo "douyin/app/common/config"
+	"douyin/app/common/errx"
 	"douyin/app/common/log"
 	"douyin/app/service/video/api/internal/config"
 	"douyin/app/service/video/rpc/sys/sys"
 	"github.com/StellarisW/go-sensitive"
+	"github.com/minio/minio-go/v7"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 	"go.uber.org/zap"
@@ -21,6 +23,8 @@ type ServiceContext struct {
 	SysRpcClient sys.Sys
 
 	Filter *sensitive.Manager
+
+	MinioClient *minio.Client
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -47,6 +51,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		log.Logger.Fatal("initialize JWTAuthMiddleware failed.", zap.Error(err))
 	}
 
+	minioClient, err := apollo.Database().NewMinioClient()
+	if err != nil {
+		log.Logger.Fatal(errx.InitMinio, zap.Error(err))
+	}
+
 	return &ServiceContext{
 		Config: c,
 
@@ -65,5 +74,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		),
 
 		Filter: filterManager,
+
+		MinioClient: minioClient,
 	}
 }

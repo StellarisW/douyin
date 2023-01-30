@@ -30,6 +30,7 @@ const (
 	ErrIdOpenFile = iota + ErrIdCommon
 	ErrIdReadBytes
 	ErrIdInvalidVideoType
+	ErrIdMinioPut
 )
 
 const (

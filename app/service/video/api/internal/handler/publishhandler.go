@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"bytes"
+	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
@@ -8,6 +10,8 @@ import (
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
+	"fmt"
+	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -73,6 +77,7 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		fhs := r.MultipartForm.File["data"]
 
 		var contentBytes []byte
+		var contentType string
 
 		if len(fhs) > 0 {
 			file, err := fhs[0].Open()
@@ -114,7 +119,7 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			}
 
 			// 判断文件类型
-			contentType := http.DetectContentType(contentBytes)
+			contentType = http.DetectContentType(contentBytes)
 			if !strings.HasPrefix(contentType, "video") {
 				httpx.WriteJson(
 					w,
@@ -133,11 +138,43 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					})
 				return
 			}
+
 		}
 
-		res, err := l.Publish(&req, contentBytes)
+		res, videoId, err := l.Publish(&req)
 		if err != nil {
 			log.Logger.Error(errx.ProcessHttpLogic, zap.Error(err))
+		}
+
+		buffer := bytes.NewBuffer(contentBytes)
+
+		_, err = svcCtx.MinioClient.PutObject(context.Background(),
+			douyin.MinioBucket,
+			fmt.Sprintf("video/%d/video", videoId),
+			buffer,
+			int64(buffer.Len()),
+			minio.PutObjectOptions{
+				ContentType: contentType,
+			},
+		)
+		if err != nil {
+			log.Logger.Error(errx.MinioPut, zap.Error(err))
+			httpx.WriteJson(
+				w,
+				http.StatusForbidden,
+				&types.PublishRes{
+					StatusCode: errx.Encode(
+						errx.Logic,
+						sys.SysId,
+						douyin.Api,
+						sys.ServiceIdApi,
+						consts.ErrIdLogicCrud,
+						crud.ErrIdOprPublish,
+						crud.ErrIdMinioPut,
+					),
+					StatusMsg: errx.Internal,
+				})
+			return
 		}
 
 		log.Logger.Debug("send:", zap.Reflect("args", res))

@@ -1,7 +1,6 @@
 package crud
 
 import (
-	"bytes"
 	"context"
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
@@ -10,19 +9,16 @@ import (
 	"douyin/app/service/video/rpc/sys/internal/model/dao/entity"
 	"fmt"
 	"github.com/go-redis/redis/v9"
-	"github.com/minio/minio-go/v7"
 	"github.com/yitter/idgenerator-go/idgen"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
 type (
 	Model interface {
-		Publish(ctx context.Context, userId int64, title string, data []byte) errx.Error
+		Publish(ctx context.Context, userId int64, title string) (int64, errx.Error)
 		Favorite(ctx context.Context, userId, videoId int64, actionType uint32) errx.Error
 		Comment(ctx context.Context, userId, videoId int64, actionType uint32, commentText string, commentId int64) errx.Error
 	}
@@ -30,20 +26,18 @@ type (
 		idGenerator *idgen.DefaultIdGenerator
 		db          *gorm.DB
 		rdb         *redis.ClusterClient
-		minioClient *minio.Client
 	}
 )
 
-func NewModel(idGenerator *idgen.DefaultIdGenerator, db *gorm.DB, rdb *redis.ClusterClient, minioClient *minio.Client) *DefaultModel {
+func NewModel(idGenerator *idgen.DefaultIdGenerator, db *gorm.DB, rdb *redis.ClusterClient) *DefaultModel {
 	return &DefaultModel{
 		idGenerator: idGenerator,
 		db:          db,
 		rdb:         rdb,
-		minioClient: minioClient,
 	}
 }
 
-func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string, data []byte) errx.Error {
+func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string) (int64, errx.Error) {
 	videoId := m.idGenerator.NewLong()
 	if title == "" {
 		title = defaultVideoTitle
@@ -63,35 +57,10 @@ func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string, 
 		Create(videoSubject).Error
 	if err != nil {
 		log.Logger.Error(errx.MysqlInsert, zap.Error(err))
-		return errMysqlInsert
+		return 0, errMysqlInsert
 	}
 
-	contentType := http.DetectContentType(data)
-	if !strings.HasPrefix(contentType, "video") {
-		return errInvalidContentType
-	}
-
-	buffer := bytes.NewBuffer(data)
-
-	go func() {
-		_, err = m.minioClient.PutObject(context.Background(),
-			douyin.MinioBucket,
-			fmt.Sprintf("video/%d/video", videoId),
-			buffer,
-			int64(buffer.Len()),
-			minio.PutObjectOptions{
-				ContentType: contentType,
-			},
-		)
-		if err != nil {
-			m.db.WithContext(context.Background()).
-				Delete(videoSubject)
-			log.Logger.Error(errx.MinioPut, zap.Error(err))
-			return
-		}
-	}()
-
-	return nil
+	return videoId, nil
 }
 
 func (m *DefaultModel) Favorite(ctx context.Context, userId, videoId int64, actionType uint32) errx.Error {

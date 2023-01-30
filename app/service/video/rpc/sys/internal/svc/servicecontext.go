@@ -35,17 +35,12 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		log.Logger.Fatal(errx.InitRedis, zap.Error(err))
 	}
 
-	minioClient, err := apollo.Database().NewMinioClient()
-	if err != nil {
-		log.Logger.Fatal(errx.InitMinio, zap.Error(err))
-	}
-
 	userSysRpcClient := usersys.NewSys(zrpc.MustNewClient(c.UserSysRpcClientConf))
 
 	return &ServiceContext{
 		Config: c,
 
-		CrudModel: crud.NewModel(idGenerator, db, rdb, minioClient),
+		CrudModel: crud.NewModel(idGenerator, db, rdb),
 		InfoModel: info.NewModel(db, rdb, userSysRpcClient),
 	}
 }

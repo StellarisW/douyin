@@ -32,11 +32,11 @@ message Comment{
 message PublishReq{
     int64 user_id=1;
     string title=2;
-    bytes data=3;
 }
 message PublishRes{
     uint32 status_code = 1;
     string status_msg = 2;
+    int64 video_id=3;
 }
 
 message GetPublishListReq{
