@@ -5,11 +5,11 @@ package user.sys;
 option go_package = "./pb";
 
 message Profile{
-    int64 id=1;
-    string name=2;
-    int64 follow_count=3;
-    int64 follower_count=4;
-    bool is_follow=5;
+    int64 id=1; // 用户id
+    string name=2; // 用户名称
+    int64 follow_count=3; // 关注总数
+    int64 follower_count=4; // 粉丝总数
+    bool is_follow=5; // true-已关注，false-未关注
 }
 
 message RegisterReq {

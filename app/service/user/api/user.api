@@ -2,97 +2,97 @@ syntax = "v1"
 
 type (
 	Profile {
-		Id            int64  `json:"id"`
-		Name          string `json:"name"`
-		FollowCount   int64  `json:"follow_count"`
-		FollowerCount int64  `json:"follower_count"`
-		IsFollow      bool   `json:"is_follow"`
+		Id            int64  `json:"id"` // 用户id
+		Name          string `json:"name"` // 用户名称
+		FollowCount   int64  `json:"follow_count"` // 关注总数
+		FollowerCount int64  `json:"follower_count"` // 粉丝总数
+		IsFollow      bool   `json:"is_follow"` // true-已关注，false-未关注
 	}
 )
 
 type (
 	RegisterReq {
-		Username string `form:"username"`
-		Password string `form:"password"`
+		Username string `form:"username"` // 注册用户名，最长32个字符
+		Password string `form:"password"` // 密码，最长32个字符
 	}
 	RegisterRes {
-		StatusCode uint32 `json:"status_code"`
-		StatusMsg  string `json:"status_msg"`
-		UserId     int64  `json:"user_id,omitempty"`
-		Token      string `json:"token,omitempty"`
+		StatusCode uint32 `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string `json:"status_msg"` // 返回状态描述
+		UserId     int64  `json:"user_id,omitempty"` // 用户id
+		Token      string `json:"token,omitempty"` // 用户鉴权token
 	}
 )
 
 type (
 	LoginReq {
-		Username string `form:"username"`
-		Password string `form:"password"`
+		Username string `form:"username"` // 登录用户名
+		Password string `form:"password"` // 密码
 	}
 	LoginRes {
-		StatusCode uint32 `json:"status_code"`
-		StatusMsg  string `json:"status_msg"`
-		UserId     int64  `json:"user_id,omitempty"`
-		Token      string `json:"token,omitempty"`
+		StatusCode uint32 `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string `json:"status_msg"` // 返回状态描述
+		UserId     int64  `json:"user_id,omitempty"` // 用户id
+		Token      string `json:"token,omitempty"` // 用户鉴权token
 	}
 )
 
 type (
 	GetProfileReq {
-		UserId string `form:"user_id"`
-		Token  string `form:"token"`
+		UserId string `form:"user_id"` // 用户id
+		Token  string `form:"token"` // 用户鉴权token
 	}
 	GetProfileRes {
-		StatusCode uint32   `json:"status_code"`
-		StatusMsg  string   `json:"status_msg"`
-		User       *Profile `json:"user,omitempty"`
+		StatusCode uint32   `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string   `json:"status_msg"` // 返回状态描述
+		User       *Profile `json:"user,omitempty"` // 用户信息
 	}
 )
 
 type (
 	RelationReq {
-		Token      string `form:"token"`
-		ToUserId   string `form:"to_user_id"`
-		ActionType string `form:"action_type"`
+		Token      string `form:"token"` // 用户鉴权token
+		ToUserId   string `form:"to_user_id"` // 对方用户id
+		ActionType string `form:"action_type"` // 1-关注，2-取消关注
 	}
 	RelationRes {
-		StatusCode uint32 `json:"status_code"`
-		StatusMsg  string `json:"status_msg"`
+		StatusCode uint32 `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string `json:"status_msg"` // 返回状态描述
 	}
 )
 
 type (
 	GetFollowListReq {
-		UserId string `form:"user_id"`
-		Token  string `form:"token"`
+		UserId string `form:"user_id"` // 用户id
+		Token  string `form:"token"` // 用户鉴权token
 	}
 	GetFollowListRes {
-		StatusCode uint32      `json:"status_code"`
-		StatusMsg  string      `json:"status_msg"`
-		UserList   interface{} `json:"user_list,omitempty"`
+		StatusCode uint32      `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string      `json:"status_msg"` // 返回状态描述
+		UserList   interface{} `json:"user_list,omitempty"` // 用户信息列表
 	}
 )
 
 type (
 	GetFollowerListReq {
-		UserId string `form:"user_id"`
-		Token  string `form:"token"`
+		UserId string `form:"user_id"` // 用户id
+		Token  string `form:"token"` // 用户鉴权token
 	}
 	GetFollowerListRes {
-		StatusCode uint32      `json:"status_code"`
-		StatusMsg  string      `json:"status_msg"`
-		UserList   interface{} `json:"user_list,omitempty"`
+		StatusCode uint32      `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string      `json:"status_msg"` // 返回状态描述
+		UserList   interface{} `json:"user_list,omitempty"` // 用户列表
 	}
 )
 
 type (
 	GetFriendListReq {
-		UserId string `form:"user_id"`
-		Token  string `form:"token"`
+		UserId string `form:"user_id"` // 用户id
+		Token  string `form:"token"` // 用户鉴权token
 	}
 	GetFriendListRes {
-		StatusCode uint32      `json:"status_code"`
-		StatusMsg  string      `json:"status_msg"`
-		UserList   interface{} `json:"user_list,omitempty"`
+		StatusCode uint32      `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string      `json:"status_msg"` // 返回状态描述
+		UserList   interface{} `json:"user_list,omitempty"` // 用户列表
 	}
 )
 

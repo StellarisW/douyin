@@ -3,7 +3,7 @@ package jwt
 import (
 	apollo "douyin/app/common/config"
 	"douyin/app/common/errx"
-	auth2 "douyin/app/service/auth/internal/auth"
+	"douyin/app/service/auth/internal/auth"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwe"
 	"github.com/lestrrat-go/jwx/v2/jwk"
@@ -51,9 +51,9 @@ func InitJWT() error {
 }
 
 // GenerateToken 生成授权令牌
-func GenerateToken(subject string, audience string, scope string) (*auth2.Token, errx.Error) {
+func GenerateToken(subject string, audience string, scope string) (*auth.Token, errx.Error) {
 	// 解析授权令牌有效时间
-	accessTokenValidityTime, _ := time.ParseDuration(cast.ToString(auth2.ClientDetails[audience].AccessTokenValidityTime))
+	accessTokenValidityTime, _ := time.ParseDuration(cast.ToString(auth.ClientDetails[audience].AccessTokenValidityTime))
 
 	now := time.Now()
 
@@ -82,7 +82,7 @@ func GenerateToken(subject string, audience string, scope string) (*auth2.Token,
 
 	accessTokenValue := string(serializedAccessToken)
 
-	return &auth2.Token{
+	return &auth.Token{
 		TokenValue: accessTokenValue,
 		ExpiresAt:  accessToken.Expiration().Unix(),
 	}, nil

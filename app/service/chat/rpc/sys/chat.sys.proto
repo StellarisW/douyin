@@ -5,9 +5,9 @@ package chat.sys;
 option go_package = "./pb";
 
 message Message{
-    int64 id=1;
-    string content=2;
-    string create_time=3;
+    int64 id=1; // 消息id
+    string content=2; // 消息内容
+    string create_time=3; // 消息创建时间
 }
 
 message SendMessageReq{

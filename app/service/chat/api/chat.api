@@ -2,26 +2,26 @@ syntax = "v1"
 
 type (
 	SendMessageReq {
-		Token      string `form:"token"`
-		ToUserId   string `form:"to_user_id"`
-		ActionType string `form:"action_type"`
-		Content    string `form:"content,optional"`
+		Token      string `form:"token"` // 用户鉴权token
+		ToUserId   string `form:"to_user_id"` // 对方用户id
+		ActionType string `form:"action_type"` // 1-发送消息
+		Content    string `form:"content,optional"` // 消息内容
 	}
 	SendMessageRes {
-		StatusCode uint32 `json:"status_code"`
-		StatusMsg  string `json:"status_msg"`
+		StatusCode uint32 `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg  string `json:"status_msg"` // 返回状态描述
 	}
 )
 
 type (
 	GetMessageListReq {
-		Token    string `form:"token"`
-		ToUserId string `form:"to_user_id"`
+		Token    string `form:"token"` // 用户鉴权token
+		ToUserId string `form:"to_user_id"` // 对方用户id
 	}
 	GetMessageListRes {
-		StatusCode  uint32      `json:"status_code"`
-		StatusMsg   string      `json:"status_msg"`
-		MessageList interface{} `json:"message_list,omitempty"`
+		StatusCode  uint32      `json:"status_code"` // 状态码，0-成功，其他值-失败
+		StatusMsg   string      `json:"status_msg"` // 返回状态描述
+		MessageList interface{} `json:"message_list,omitempty"` // 消息列表
 	}
 )
 
