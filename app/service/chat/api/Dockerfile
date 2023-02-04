@@ -7,6 +7,7 @@ WORKDIR /server
 
 # 将代码复制到容器中
 COPY ./douyin-chat-api /server/douyin-chat-api
+COPY ./manifest/config /server/manifest/config
 
 # 设置时区
 RUN chmod 777 ./douyin-chat-api
