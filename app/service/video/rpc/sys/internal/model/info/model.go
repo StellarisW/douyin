@@ -50,7 +50,7 @@ func (m *DefaultModel) Feed(ctx context.Context, latestTime int64, srcUserId int
 	if latestTime == 0 {
 		filterTime = time.Now()
 	} else {
-		filterTime = time.Unix(latestTime, 0)
+		filterTime = time.UnixMilli(latestTime)
 	}
 
 	err := m.db.WithContext(ctx).
