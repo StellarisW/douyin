@@ -31,7 +31,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Type: sensitive.FilterDfa,
 		})
 
-	err := filterManager.GetStore().LoadDictPath("./manifest/config/dic/default_dict.txt")
+	err := filterManager.GetStore().LoadDictPath("./manifest/config/dict/default_dict.txt")
 	if err != nil {
 		log.Logger.Fatal("initialize filter failed", zap.Error(err))
 	}
