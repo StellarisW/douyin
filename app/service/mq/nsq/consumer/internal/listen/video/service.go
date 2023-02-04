@@ -22,7 +22,7 @@ func NewService(svcCtx *svc.ServiceContext) ([]service.Service, error) {
 	videoCommentConsumerService, err := nsq.NewConsumerService(
 		consts.TopicVideoComment,
 		consts.ChannelVideoComment,
-		&FavoriteHandler{
+		&CommentHandler{
 			VideoSysRpcClient: svcCtx.VideoSysRpcClient,
 		},
 	)
