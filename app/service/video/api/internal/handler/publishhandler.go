@@ -17,7 +17,6 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -153,7 +152,7 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 				Filter("select", ffmpeg.Args{"gte(n,1)"}).
 				Output("-", ffmpeg.KwArgs{"vframes": 1, "q:v": "2", "f": "image2"}).
 				OverWriteOutput().
-				WithOutput(imgBuffer, os.Stdout).
+				WithOutput(imgBuffer).
 				WithErrorOutput(cmdOutput).
 				WithInput(videoBuffer).
 				WithTimeout(3 * time.Second).
