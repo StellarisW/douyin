@@ -7,13 +7,13 @@ import (
 	"douyin/app/common/log"
 	"douyin/app/service/user/api/internal/consts"
 	"douyin/app/service/user/api/internal/consts/sign"
+	"douyin/app/service/user/api/internal/svc"
+	"douyin/app/service/user/api/internal/types"
 	"douyin/app/service/user/internal/sys"
 	"douyin/app/service/user/internal/user"
 	"douyin/app/service/user/rpc/sys/pb"
+	"fmt"
 	"go.uber.org/zap"
-
-	"douyin/app/service/user/api/internal/svc"
-	"douyin/app/service/user/api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -94,6 +94,40 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginRes, err error
 			),
 			StatusMsg: sign.ErrUsernameNotExist,
 		}, nil
+	}
+
+	// 查看用户是否被冻结
+	frozenTime, err := l.svcCtx.Rdb.TTL(l.ctx,
+		user.RdbKeyLoginFrozenTime+req.Username).Result()
+	if err != nil {
+		log.Logger.Error(errx.RedisGet, zap.Error(err))
+		return &types.LoginRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicSign,
+				sign.ErrIdOprLogin,
+				sign.ErrIdRedisGet,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	} else {
+		if frozenTime.String() != "-2ns" {
+			return &types.LoginRes{
+				StatusCode: errx.Encode(
+					errx.Logic,
+					sys.SysId,
+					douyin.Api,
+					sys.ServiceIdApi,
+					consts.ErrIdLogicSign,
+					sign.ErrIdOprLogin,
+					sign.ErrIdLoginFrozen,
+				),
+				StatusMsg: fmt.Sprintf("%s, remain: %s", sign.ErrLoginFrozen, frozenTime.String()),
+			}, nil
+		}
 	}
 
 	rpcRes, _ := l.svcCtx.SysRpcClient.Login(l.ctx, &pb.LoginReq{

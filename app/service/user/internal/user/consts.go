@@ -3,12 +3,18 @@ package user
 import "douyin/app/service/user/internal/sys"
 
 const (
-	RdbKey         = sys.SysName + ":"
-	RdbKeyRegister = RdbKey + "register:"
-	RdbKeyRelation = RdbKey + "relation:"
+	rdbKey         = sys.SysName + ":"
+	rdbKeyRegister = rdbKey + "register:"
+	rdbKeyLogin    = rdbKey + "login:"
+	rdbKeyRelation = rdbKey + "relation:"
 
-	RdbKeyRegisterSet = RdbKeyRegister + "set"
+	RdbKeyRegisterSet = rdbKeyRegister + "set"
 
-	RdbKeyFollow   = "{" + RdbKeyRelation + "}follow:"
-	RdbKeyFollower = "{" + RdbKeyRelation + "}follower:"
+	rdbKeyLoginFrozen         = rdbKeyLogin + "frozen:"
+	RdbKeyLoginFrozenTime     = rdbKeyLoginFrozen + "time:"
+	RdbKeyLoginFrozenTimeLast = rdbKeyLoginFrozen + "time:last:"
+	RdbKeyLoginFrozenLoginCnt = rdbKeyLoginFrozen + "cnt:"
+
+	RdbKeyFollow   = "{" + rdbKeyRelation + "}follow:"
+	RdbKeyFollower = "{" + rdbKeyRelation + "}follower:"
 )

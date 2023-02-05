@@ -34,8 +34,10 @@ const (
 
 const (
 	ErrIdUsernameNotExist = iota + ErrIdCommon
+	ErrIdLoginFrozen
 )
 
 const (
 	ErrUsernameNotExist = "username not exist"
+	ErrLoginFrozen      = "user is frozen"
 )

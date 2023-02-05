@@ -19,6 +19,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const clientId = "douyin"
@@ -117,6 +118,92 @@ func (m *DefaultModel) Login(ctx context.Context, username, password string) (in
 		Error
 	switch err {
 	case nil:
+		// 查看账户登录次数
+		cnt, err := m.rdb.Get(ctx,
+			user.RdbKeyLoginFrozenLoginCnt+username).Int64()
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisGet, zap.Error(err))
+				return 0, "", errRedisGet
+			}
+		} else {
+			if cnt > 10 {
+				// 短时间内登录大于10次则冻结
+				lastFrozenTime, err := m.rdb.Get(ctx,
+					user.RdbKeyLoginFrozenTimeLast+username).Result()
+				if err != nil {
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisGet, zap.Error(err))
+						return 0, "", errRedisGet
+					}
+				}
+
+				var lastDuration time.Duration
+				var currentDuration time.Duration
+				switch lastFrozenTime {
+				case "":
+					lastDuration, _ = time.ParseDuration("1s")
+					currentDuration, _ = time.ParseDuration("1m")
+				case "1s":
+					lastDuration, _ = time.ParseDuration("1m")
+					currentDuration, _ = time.ParseDuration("15m")
+				case "1m":
+					lastDuration, _ = time.ParseDuration("15m")
+					currentDuration, _ = time.ParseDuration("1h")
+				case "15m":
+					lastDuration, _ = time.ParseDuration("1h")
+					currentDuration, _ = time.ParseDuration("24h")
+				case "1h":
+					lastDuration, _ = time.ParseDuration("24h")
+					currentDuration, _ = time.ParseDuration("168h")
+				case "1d":
+					lastDuration, _ = time.ParseDuration("168h")
+					currentDuration, _ = time.ParseDuration("720h")
+				case "7d":
+					lastDuration = -1
+					currentDuration = -1
+				}
+
+				err = m.rdb.Set(ctx,
+					user.RdbKeyLoginFrozenTimeLast+username,
+					1,
+					lastDuration).Err()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return 0, "", errRedisGet
+				}
+
+				err = m.rdb.Set(ctx,
+					user.RdbKeyLoginFrozenTime+username,
+					1,
+					currentDuration).Err()
+				if err != nil {
+					log.Logger.Error(errx.RedisSet, zap.Error(err))
+					return 0, "", errRedisSet
+				}
+
+				err = m.rdb.Del(ctx,
+					user.RdbKeyLoginFrozenLoginCnt+username).Err()
+				if err != nil {
+					log.Logger.Error(errx.RedisDel, zap.Error(err))
+					return 0, "", errRedisDel
+				}
+			}
+		}
+
+		// 登录次数增加一次
+		cnt, err = m.rdb.Incr(ctx,
+			user.RdbKeyLoginFrozenLoginCnt+username).Result()
+		if err != nil {
+			log.Logger.Error(errx.RedisIncr, zap.Error(err))
+			return 0, "", errRedisIncr
+		} else {
+			if cnt == 1 {
+				m.rdb.Expire(ctx,
+					user.RdbKeyLoginFrozenLoginCnt+username,
+					time.Minute*15)
+			}
+		}
 
 		token, erx := m.getToken(ctx, userId)
 		if erx != nil {
