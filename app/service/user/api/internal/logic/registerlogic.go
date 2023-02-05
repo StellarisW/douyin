@@ -10,7 +10,9 @@ import (
 	"douyin/app/service/user/api/internal/svc"
 	"douyin/app/service/user/api/internal/types"
 	"douyin/app/service/user/internal/sys"
+	"douyin/app/service/user/internal/user"
 	"douyin/app/service/user/rpc/sys/pb"
+	"go.uber.org/zap"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -57,6 +59,39 @@ func (l *RegisterLogic) Register(req *types.RegisterReq) (resp *types.RegisterRe
 				sign.ErrIdInvalidUsername,
 			),
 			StatusMsg: sign.ErrInvalidPassword,
+		}, nil
+	}
+
+	isExist, err := l.svcCtx.Rdb.SIsMember(l.ctx,
+		user.RdbKeyRegisterSet,
+		req.Username).Result()
+	if err != nil {
+		log.Logger.Error(errx.RedisGet, zap.Error(err))
+		return &types.RegisterRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicSign,
+				sign.ErrIdOprRegister,
+				sign.ErrIdRedisGet,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	}
+	if isExist {
+		return &types.RegisterRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicSign,
+				sign.ErrIdOprRegister,
+				sign.ErrIdUsernameExist,
+			),
+			StatusMsg: sign.ErrUsernameExist,
 		}, nil
 	}
 

@@ -7,6 +7,7 @@ var (
 
 	errMysqlGet              = errx.New(ErrIdMysqlGet, errx.MysqlGet)
 	errMysqlInsert           = errx.New(ErrIdMysqlInsert, errx.MysqlInsert)
+	errRedisSet              = errx.New(ErrIdRedisSet, errx.RedisSet)
 	errRequestHttpSend       = errx.New(ErrIdRequestHttpSend, errx.RequestHttpSend)
 	errRequestHttpStatusCode = errx.New(ErrIdRequestHttpStatusCode, errx.RequestHttpStatusCode)
 )

@@ -9,8 +9,10 @@ const (
 
 const (
 	ErrIdRequestRpcReceiveSys = iota + 1
+	ErrIdRedisGet
 	ErrIdInvalidUsername
 	ErrIdInvalidPassword
+	ErrIdCommon
 )
 
 const (
@@ -18,4 +20,22 @@ const (
 	ErrInvalidPassword = "invalid password"
 )
 
-//
+// Register
+
+const (
+	ErrIdUsernameExist = iota + ErrIdCommon
+)
+
+const (
+	ErrUsernameExist = "username already exist"
+)
+
+// Login
+
+const (
+	ErrIdUsernameNotExist = iota + ErrIdCommon
+)
+
+const (
+	ErrUsernameNotExist = "username not exist"
+)

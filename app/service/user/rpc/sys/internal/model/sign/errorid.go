@@ -12,6 +12,7 @@ const (
 
 	ErrIdMysqlGet = iota
 	ErrIdMysqlInsert
+	ErrIdRedisSet
 	ErrIdRequestHttpSend
 	ErrIdRequestHttpStatusCode
 	ErrIdCommon

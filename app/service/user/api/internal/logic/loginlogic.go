@@ -8,7 +8,9 @@ import (
 	"douyin/app/service/user/api/internal/consts"
 	"douyin/app/service/user/api/internal/consts/sign"
 	"douyin/app/service/user/internal/sys"
+	"douyin/app/service/user/internal/user"
 	"douyin/app/service/user/rpc/sys/pb"
+	"go.uber.org/zap"
 
 	"douyin/app/service/user/api/internal/svc"
 	"douyin/app/service/user/api/internal/types"
@@ -58,6 +60,39 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginRes, err error
 				sign.ErrIdInvalidUsername,
 			),
 			StatusMsg: sign.ErrInvalidPassword,
+		}, nil
+	}
+
+	isExist, err := l.svcCtx.Rdb.SIsMember(l.ctx,
+		user.RdbKeyRegisterSet,
+		req.Username).Result()
+	if err != nil {
+		log.Logger.Error(errx.RedisGet, zap.Error(err))
+		return &types.LoginRes{
+			StatusCode: errx.Encode(
+				errx.Sys,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicSign,
+				sign.ErrIdOprLogin,
+				sign.ErrIdRedisGet,
+			),
+			StatusMsg: errx.Internal,
+		}, nil
+	}
+	if !isExist {
+		return &types.LoginRes{
+			StatusCode: errx.Encode(
+				errx.Logic,
+				sys.SysId,
+				douyin.Api,
+				sys.ServiceIdApi,
+				consts.ErrIdLogicSign,
+				sign.ErrIdOprLogin,
+				sign.ErrIdUsernameNotExist,
+			),
+			StatusMsg: sign.ErrUsernameNotExist,
 		}, nil
 	}
 

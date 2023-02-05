@@ -4,6 +4,7 @@ import (
 	"context"
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
+	"douyin/app/service/user/internal/user"
 	"douyin/app/service/user/rpc/sys/internal/model/dao/entity"
 	"encoding/base64"
 	"encoding/hex"
@@ -85,6 +86,15 @@ func (m *DefaultModel) Register(ctx context.Context, username, password string) 
 		token, erx := m.getToken(ctx, userId)
 		if erx != nil {
 			return 0, "", erx
+		}
+
+		// 添加注册缓存
+		err = m.rdb.SAdd(ctx,
+			user.RdbKeyRegisterSet,
+			username).Err()
+		if err != nil {
+			log.Logger.Error(errx.RedisSet, zap.Error(err))
+			return 0, "", errRedisSet
 		}
 
 		return userId, token, nil
