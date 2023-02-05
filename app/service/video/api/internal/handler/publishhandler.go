@@ -10,12 +10,16 @@ import (
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
+	"errors"
 	"fmt"
 	"github.com/minio/minio-go/v7"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	"douyin/app/service/video/api/internal/logic"
 	"douyin/app/service/video/api/internal/svc"
@@ -78,6 +82,8 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		var contentBytes []byte
 		var contentType string
+		var videoBuffer *bytes.Buffer
+		var imgBuffer *bytes.Buffer
 
 		if len(fhs) > 0 {
 			file, err := fhs[0].Open()
@@ -139,6 +145,38 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 				return
 			}
 
+			videoBuffer = bytes.NewBuffer(contentBytes)
+			imgBuffer = bytes.NewBuffer(nil)
+			cmdOutput := bytes.NewBuffer(nil)
+
+			err = ffmpeg.Input("-", ffmpeg.KwArgs{"loglevel": "debug"}).
+				Filter("select", ffmpeg.Args{"gte(n,1)"}).
+				Output("-", ffmpeg.KwArgs{"vframes": 1, "q:v": "2", "f": "image2"}).
+				OverWriteOutput().
+				WithOutput(imgBuffer, os.Stdout).
+				WithErrorOutput(cmdOutput).
+				WithInput(videoBuffer).
+				WithTimeout(3 * time.Second).
+				Run()
+			if err != nil {
+				log.Logger.Error(crud.ErrGetVideoImage, zap.Error(errors.New(cmdOutput.String())))
+				httpx.WriteJson(
+					w,
+					http.StatusForbidden,
+					&types.PublishRes{
+						StatusCode: errx.Encode(
+							errx.Logic,
+							sys.SysId,
+							douyin.Api,
+							sys.ServiceIdApi,
+							consts.ErrIdLogicCrud,
+							crud.ErrIdOprPublish,
+							crud.ErrIdGetVideoImage,
+						),
+						StatusMsg: errx.Internal,
+					})
+				return
+			}
 		}
 
 		res, videoId, err := l.Publish(&req)
@@ -146,13 +184,40 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			log.Logger.Error(errx.ProcessHttpLogic, zap.Error(err))
 		}
 
-		buffer := bytes.NewBuffer(contentBytes)
+		_, err = svcCtx.MinioClient.PutObject(context.Background(),
+			douyin.MinioBucket,
+			fmt.Sprintf("video/%d/cover", videoId),
+			imgBuffer,
+			int64(imgBuffer.Len()),
+			minio.PutObjectOptions{
+				ContentType: "image/jpeg",
+			},
+		)
+		if err != nil {
+			log.Logger.Error(errx.MinioPut, zap.Error(err))
+			httpx.WriteJson(
+				w,
+				http.StatusForbidden,
+				&types.PublishRes{
+					StatusCode: errx.Encode(
+						errx.Logic,
+						sys.SysId,
+						douyin.Api,
+						sys.ServiceIdApi,
+						consts.ErrIdLogicCrud,
+						crud.ErrIdOprPublish,
+						crud.ErrIdMinioPut,
+					),
+					StatusMsg: errx.Internal,
+				})
+			return
+		}
 
 		_, err = svcCtx.MinioClient.PutObject(context.Background(),
 			douyin.MinioBucket,
 			fmt.Sprintf("video/%d/video", videoId),
-			buffer,
-			int64(buffer.Len()),
+			videoBuffer,
+			int64(videoBuffer.Len()),
 			minio.PutObjectOptions{
 				ContentType: contentType,
 			},

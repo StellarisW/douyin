@@ -18,6 +18,7 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/viper v1.14.0
 	github.com/tidwall/gjson v1.14.4
+	github.com/u2takey/ffmpeg-go v0.4.1
 	github.com/yitter/idgenerator-go v1.3.2
 	github.com/zeromicro/go-zero v1.4.3
 	github.com/zeromicro/zero-contrib/zrpc/registry/consul v0.0.0-20230105125244-9279708d0fa6
@@ -34,6 +35,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/armon/go-metrics v0.4.0 // indirect
+	github.com/aws/aws-sdk-go v1.38.20 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -76,6 +78,7 @@ require (
 	github.com/hashicorp/serf v0.9.8 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
@@ -120,6 +123,7 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/u2takey/go-utils v0.3.1 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.5 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.5 // indirect

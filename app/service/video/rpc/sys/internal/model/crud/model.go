@@ -43,7 +43,7 @@ func (m *DefaultModel) Publish(ctx context.Context, userId int64, title string) 
 		title = defaultVideoTitle
 	}
 	playUrl := fmt.Sprintf("%s/%s/video/%d/video", douyin.MinioDomain, douyin.MinioBucket, videoId)
-	coverUrl := defaultVideoCoverUrl
+	coverUrl := fmt.Sprintf("%s/%s/video/%d/image", douyin.MinioDomain, douyin.MinioBucket, videoId)
 
 	videoSubject := &entity.VideoSubject{
 		ID:       videoId,

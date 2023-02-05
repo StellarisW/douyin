@@ -31,9 +31,11 @@ const (
 	ErrIdReadBytes
 	ErrIdInvalidVideoType
 	ErrIdMinioPut
+	ErrIdGetVideoImage
 )
 
 const (
 	ErrOpenFile         = "open file failed"
 	ErrInvalidVideoType = "invalid video type"
+	ErrGetVideoImage    = "get video image from frame failed"
 )
