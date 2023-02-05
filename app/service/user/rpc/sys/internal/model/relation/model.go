@@ -369,15 +369,9 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 }
 
 func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
-	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId), 0, -1).Result()
-	if err != nil {
-		log.Logger.Error(errx.RedisRange, zap.Error(err))
-		return nil, errRedisRange
-	}
-
-	friendIds, err := m.rdb.ZInter(ctx, &redis.ZStore{
+	ids, err := m.rdb.ZInter(ctx, &redis.ZStore{
 		Keys: []string{
-			fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
+			fmt.Sprintf("%s%d", user.RdbKeyFollow, dstUserId),
 			fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId),
 		},
 	}).Result()
@@ -386,29 +380,38 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 		return nil, errRedisInter
 	}
 
-	if len(friendIds) == 0 {
-		friendIds = append(friendIds, "")
+	interIds, err := m.rdb.ZInter(ctx, &redis.ZStore{
+		Keys: []string{
+			fmt.Sprintf("%s%d", user.RdbKeyFollow, dstUserId),
+			fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId),
+			fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId),
+		},
+	}).Result()
+	if err != nil {
+		log.Logger.Error(errx.RedisInter, zap.Error(err))
+		return nil, errRedisInter
 	}
 
-	profiles := make([]*pb.Profile, len(friendIds))
+	if len(interIds) == 0 {
+		interIds = append(interIds, "")
+	}
 
-	size := len(friendIds)
+	profiles := make([]*pb.Profile, len(ids))
+
+	size := len(ids)
 
 	eg := new(errgroup.Group)
 
-	idsLen := len(ids)
-	idsIndex := 0
+	interIndex := 0
 	for i := 0; i < size; i++ {
 		i := i
-		id := friendIds[i]
+		id := ids[i]
 
 		var isFollow bool
-		for j := idsIndex; j <= idsLen; j++ {
-			if friendIds[i] == ids[j] {
-				isFollow = true
-				idsIndex = j + 1
-				break
-			}
+
+		if ids[i] == interIds[interIndex] {
+			isFollow = true
+			interIndex++
 		}
 
 		eg.Go(func() error {
