@@ -177,6 +177,9 @@ func PublishHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					})
 				return
 			}
+
+			videoBuffer.Reset()
+			videoBuffer.Write(contentBytes)
 		}
 
 		res, videoId, err := l.Publish(&req)
