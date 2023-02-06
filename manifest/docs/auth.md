@@ -10,7 +10,9 @@
 
 ## 架构设计
 
+<div style="text-align: center">
 <img src="image/auth-module.png">
+</div>
 
 ### 令牌的颁发与校验
 
