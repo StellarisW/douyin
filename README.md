@@ -447,6 +447,66 @@ go-zero框架集成了对jaeger的支持，因此使用jaeger做追踪系统
 
 ## 🛠 开发准备
 
+为了开发过程中方便本地调试，需要作出一下准备
+
+### 添加hosts
+
+因为服务内部之间会使用http互相通信，如：
+
+```go
+func (m *DefaultModel) getToken(ctx context.Context, userId int64) (string, errx.Error) {
+	authRes, err := req.NewRequest().
+		SetHeader("Authorization", m.AuthString).
+		SetQueryParam("obj", strconv.FormatInt(userId, 10)).
+		Get("http://douyin-auth-api:11120/douyin/token/auth")
+    ...
+}
+```
+
+同时也方便使用接口测试工具进行本地调试，需要添加以下hosts
+
+```
+127.0.0.1 douyin-auth-api
+127.0.0.1 douyin-uesr-api
+127.0.0.1 douyin-video-api
+127.0.0.1 douyin-chat-api
+```
+
+### 添加环境变量
+
+#### 运行模式
+
+**环境变量名**：DOUYIN_MODE
+
+**环境变量值**：
+
+```go
+const (
+	ModeEnvName = "DOUYIN_MODE"
+	DevMode     = "dev" // 开发环境, 后端人员使用
+	FatMode     = "fat" // 功能验收测试环境, 前端人员使用
+	UatMode     = "uat" // 用户验收测试环境, 模拟上线环境
+	ProMode     = "pro" // 生产环境, 正式环境
+)
+```
+
+### 配置管理
+
+因为本项目**配置信息**的读取高度依赖 **apollo**，所以你如果想要**本地运行(调试)**项目文件请在 `运行/调试配置` 中添加以下**环境变量**
+
+- APOLLO_APP_ID
+- APOLLO_CLUSTER_NAME
+- APOLLO_IP
+- APOLLO_SECRET
+
+<img src="manifest/docs/image/env-apollo.png">
+
+### CI 平台
+
+平台使用drone进行项目的自动构建
+
+构建配置见 [.drone.yml](.drone.yml)
+
 ## 📌 TODO
 
 - [ ] 考虑到接口文档限制，没有做分页处理
