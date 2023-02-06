@@ -1,7 +1,8 @@
 package manager
 
 import (
-	"douyin/app/service/chat/ws/internal/client"
+	"douyin/app/service/chat/api/internal/ws/internal/client"
+	"douyin/app/service/chat/rpc/sys/sys"
 	"sync"
 )
 
@@ -14,9 +15,10 @@ type ClientManager struct {
 	LoginChan      chan *client.Login          // 用户登录处理
 	UnregisterChan chan *client.Client         // 断开连接处理程序
 	BroadcastChan  chan []byte                 // 广播 向全体用户发送数据
+	ChatRpcClient  sys.Sys
 }
 
-func NewClientManager() (clientManager *ClientManager) {
+func NewClientManager(RpcClient sys.Sys) (clientManager *ClientManager) {
 	clientManager = &ClientManager{
 		Clients:        make(map[*client.Client]struct{}),
 		Users:          make(map[int64]*client.Client),
@@ -24,6 +26,7 @@ func NewClientManager() (clientManager *ClientManager) {
 		LoginChan:      make(chan *client.Login, 1000),
 		UnregisterChan: make(chan *client.Client, 1000),
 		BroadcastChan:  make(chan []byte, 1000),
+		ChatRpcClient:  RpcClient,
 	}
 
 	return

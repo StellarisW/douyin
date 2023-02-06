@@ -1,14 +1,16 @@
 package manager
 
 import (
+	"context"
 	"douyin/app/common/log"
-	"douyin/app/service/chat/ws/internal/client"
+	"douyin/app/service/chat/api/internal/ws/internal/client"
+	"douyin/app/service/chat/rpc/sys/pb"
 	"go.uber.org/zap"
 	"time"
 )
 
 var (
-	Manager = NewClientManager()
+	Manager = &ClientManager{}
 )
 
 func (m *ClientManager) start() {
@@ -34,6 +36,15 @@ func (m *ClientManager) start() {
 			}
 		}
 	}
+}
+
+func (m *ClientManager) StoreMessage(srcUserId, dstUserid int64, content string) {
+	_, _ = m.ChatRpcClient.SendMessage(context.Background(), &pb.SendMessageReq{
+		SrcUserId:  srcUserId,
+		DstUserId:  dstUserid,
+		ActionType: 1,
+		Content:    content,
+	})
 }
 
 func (m *ClientManager) CheckClientExists(client *client.Client) bool {

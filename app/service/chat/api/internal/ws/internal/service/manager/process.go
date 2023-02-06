@@ -3,9 +3,9 @@ package manager
 import (
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
-	"douyin/app/service/chat/ws/internal/client"
-	"douyin/app/service/chat/ws/internal/model/request"
-	"douyin/app/service/chat/ws/internal/model/response"
+	"douyin/app/service/chat/api/internal/ws/internal/client"
+	"douyin/app/service/chat/api/internal/ws/internal/model/request"
+	"douyin/app/service/chat/api/internal/ws/internal/model/response"
 	"encoding/json"
 	"go.uber.org/zap"
 )
@@ -39,6 +39,8 @@ func ProcessData(client *client.Client, msg []byte) {
 	})
 
 	dstClient.SendMessage(responseBytes)
+
+	Manager.StoreMessage(req.UserId, req.ToUserId, req.MsgContent)
 
 	return
 }

@@ -2,7 +2,7 @@ package client
 
 import (
 	"douyin/app/common/log"
-	"douyin/app/service/chat/ws/internal/service/manager"
+	"douyin/app/service/chat/api/internal/ws/internal/service/manager"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"runtime/debug"

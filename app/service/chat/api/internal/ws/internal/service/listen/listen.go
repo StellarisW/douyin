@@ -2,7 +2,7 @@ package listen
 
 import (
 	"douyin/app/common/log"
-	"douyin/app/service/chat/ws/internal/service/listen/internal/handler"
+	"douyin/app/service/chat/api/internal/ws/internal/service/listen/internal/handler"
 	"go.uber.org/zap"
 	"net/http"
 	"os"

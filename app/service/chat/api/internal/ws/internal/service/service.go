@@ -2,9 +2,9 @@ package service
 
 import (
 	"douyin/app/common/errx"
-	"douyin/app/service/chat/ws/internal/config"
-	"douyin/app/service/chat/ws/internal/service/listen"
-	"douyin/app/service/chat/ws/internal/svc"
+	"douyin/app/service/chat/api/internal/ws/internal/config"
+	"douyin/app/service/chat/api/internal/ws/internal/service/listen"
+	"douyin/app/service/chat/api/internal/ws/internal/svc"
 	"fmt"
 	"github.com/zeromicro/go-zero/core/service"
 )

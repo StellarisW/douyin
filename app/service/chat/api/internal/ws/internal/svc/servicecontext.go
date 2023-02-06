@@ -4,7 +4,7 @@ import (
 	apollo "douyin/app/common/config"
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
-	"douyin/app/service/chat/ws/internal/config"
+	"douyin/app/service/chat/api/internal/ws/internal/config"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
