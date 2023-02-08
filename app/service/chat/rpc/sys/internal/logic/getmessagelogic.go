@@ -35,7 +35,7 @@ func (l *GetMessageLogic) GetMessage(in *pb.GetMessageReq) (*pb.GetMessageRes, e
 	chatMessages := make([]*entity.ChatMessage, 0)
 
 	err := l.svcCtx.Db.WithContext(l.ctx).
-		Select("`id`, `content`, `update_time`").
+		Select("`id`, `src_user_id`, `dst_user_id`, `content`, `update_time`").
 		Where("`src_user_id` = ? AND `dst_user_id` = ?", in.DstUserId, in.SrcUserId).
 		Find(&chatMessages).
 		Error
