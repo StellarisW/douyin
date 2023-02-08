@@ -9,6 +9,7 @@ import (
 	"douyin/app/service/chat/rpc/sys/internal/consts"
 	"douyin/app/service/chat/rpc/sys/internal/model/dao/entity"
 	"go.uber.org/zap"
+	"strconv"
 
 	"douyin/app/service/chat/rpc/sys/internal/svc"
 	"douyin/app/service/chat/rpc/sys/pb"
@@ -59,6 +60,8 @@ func (l *GetMessageLogic) GetMessage(in *pb.GetMessageReq) (*pb.GetMessageRes, e
 	for _, message := range chatMessages {
 		messages = append(messages, &pb.Message{
 			Id:         message.ID,
+			FromUserId: strconv.FormatInt(message.SrcUserID, 10),
+			ToUserId:   strconv.FormatInt(message.DstUserID, 10),
 			Content:    message.Content,
 			CreateTime: message.UpdateTime.Format("2006-01-02 15:04:05"),
 		})
