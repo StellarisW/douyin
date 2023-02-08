@@ -9,6 +9,7 @@ const (
 
 	serviceIdCORS = iota - 1
 	serviceIdJWT
+	serviceIdSentinel
 )
 
 // JWT 中间件
@@ -34,4 +35,14 @@ type ctxKey int
 const (
 	KeyUserId ctxKey = iota
 	KeyScope
+)
+
+// Sentinel 中间件
+
+const (
+	errIdFlow = iota
+)
+
+const (
+	errFlow = "pass flow rule failed"
 )
