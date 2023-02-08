@@ -61,7 +61,7 @@ func (l *GetMessageLogic) GetMessage(in *pb.GetMessageReq) (*pb.GetMessageRes, e
 			FromUserId: message.SrcUserID,
 			ToUserId:   message.DstUserID,
 			Content:    message.Content,
-			CreateTime: message.UpdateTime.Format("2006-01-02 15:04:05"),
+			CreateTime: message.UpdateTime.Unix(),
 		})
 	}
 
