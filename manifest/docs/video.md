@@ -1,6 +1,8 @@
 ## 架构设计
 
+<div style="text-align: center">
 <img src="image/video-module.png">
+</div>
 
 ## 接口设计
 
@@ -69,9 +71,13 @@
 
 3. 客户端接收响应信息，在页面显示视频和基本信息
 
+<div style="text-align: center">
 <img src="image/video-feed-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/video-feed-uml.jpg" width="75%">
+</div>
 
 #### 视频投稿
 
@@ -111,9 +117,13 @@
 
 4. 客户端接收响应信息，在页面显示视频和基本信息
 
+<div style="text-align: center">
 <img src="image/video-publish-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/video-publish-uml.jpg" width="75%">
+</div>
 
 #### 投稿列表
 
@@ -180,9 +190,13 @@
 
 3. 客户端接收响应信息，在页面显示列表信息
 
+<div style="text-align: center">
 <img src="image/video-publish-list-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/video-publish-list-uml.jpg" width="75%">
+</div>
 
 
 
@@ -234,9 +248,13 @@
 
 4. 客户端接收响应信息，在页面切换组件状态
 
+<div style="text-align: center">
 <img src="image/video-favorite-flow.jpg" width="75%">
+</div>
 
+<div style="text-align: center">
 <img src="image/video-favorite-uml.jpg" width="75%">
+</div>
 
 #### 点赞列表
 
@@ -304,9 +322,13 @@
 
 3. 客户端接收响应信息，在页面显示列表信息
 
+<div style="text-align: center">
 <img src="image/video-favorite-list-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/video-favorite-list-uml.jpg" width="75%">
+</div>
 
 ### 视频评论
 
@@ -388,9 +410,13 @@
 
 5. 客户端接收响应信息，页面显示评论内容或删除评论内容
 
+<div style="text-align: center">
 <img src="image/video-comment-flow.jpg" width="75%">
+</div>
 
+<div style="text-align: center">
 <img src="image/video-comment-uml.jpg" width="75%">
+</div>
 
 #### 评论列表
 
@@ -456,9 +482,13 @@
 
 4. 客户端接收响应，在页面显示评论列表内容
 
+<div style="text-align: center">
 <img src="image/video-comment-list-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/video-comment-list-uml.jpg" width="75%">
+</div>
 
 ## 设计亮点
 

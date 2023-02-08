@@ -1,6 +1,8 @@
 ## 架构设计
 
+<div style="text-align: center">
 <img src="image/user-module.png">
+</div>
 
 ## 接口设计
 
@@ -40,9 +42,13 @@
     ​	若不存在，则生成用户 ID，在加密密码后向数据库中添加用户信息，并基于当前时间戳生成用户信息 token，返回包含用户 ID 和 token 信息的响应信息
 4. 客户端接收响应信息，切换至登录状态
 
+<div style="text-align: center">
 <img src="image/user-register-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/user-register-uml.jpg" width="75%">
+</div>
 
 ##### 亮点
 
@@ -241,9 +247,13 @@
     ​		若存在，则基于当前时间戳生成新的用户信息 token，并**返回包含用户 ID 和 token 信息的响应信息**
 3. 客户端接收响应信息，切换至登录状态
 
+<div style="text-align: center">
 <img src="image/user-login-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/user-login-uml.jpg" width="75%">
+</div>
 
 ##### 亮点
 
@@ -449,9 +459,13 @@
 
 3. 客户端接收响应，在个人主页显示用户信息
 
+<div style="text-align: center">
 <img src="image/user-profile-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/user-profile-uml.jpg" width="75%">
+</div>
 
 ##### 亮点
 
@@ -459,7 +473,9 @@
 
     用户信息包含关注数，粉丝数，是否关注，这三个信息需要查询在 redis 中的三个 key，可以使用 MapReduce 同时查询 keys，降低串行依赖产生的额外耗时
 
+    <div style="text-align: center">
     <img src="image/mapreduce.png">
+    </div>
     
     ```go
     func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profile, errx.Error) {
@@ -541,11 +557,11 @@
 
 这个就比较简单了,将`关注`这一个关系作为一种实体存储下来.数据表结构(follow)如下:
 
-| id   | src_user_id | dst_user_id | ts   |
-| :--- | :---------- | :---------- | :--- |
-| 1    | A           | B           | time |
-| 2    | B           | C           | time |
-| 3    | A           | C           | time |
+| id  | src_user_id | dst_user_id | ts   |
+|:----|:------------|:------------|:-----|
+| 1   | A           | B           | time |
+| 2   | B           | C           | time |
+| 3   | A           | C           | time |
 
 这种存储在功能上市勉强可以实现的.
 
@@ -608,7 +624,9 @@
 
 **集合关系图**：
 
+<div style="text-align: center">
 <img src="image/relation.png">
+</div>
 
 如上图所示。左边的圆表示用户的关注列表，右边的圆表示粉丝列表，下边的圆表示的是要查看的列表(集合)。分别用`follow`，`follower`，`find`来表明这三个集合。
 
@@ -776,9 +794,13 @@
 
 4. 客户端接收响应信息，在页面切换组件状态
 
+<div style="text-align: center">
 <img src="image/user-relation-flow.jpg" width="75%">
+</div>
 
+<div style="text-align: center">
 <img src="image/user-relation-uml.jpg" width="75%">
+</div>
 
 ##### 亮点
 
@@ -922,9 +944,13 @@
 
 3. 客户端接收响应信息，在页面显示列表信息
 
+<div style="text-align: center">
 <img src="image/user-list-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/user-list-uml.jpg" width="75%">
+</div>
 
 ##### 亮点
 

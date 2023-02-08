@@ -1,6 +1,8 @@
 ## 架构设计
 
+<div style="text-align: center">
 <img src="image/chat-module.png">
+</div>
 
 ## 接口设计
 
@@ -49,9 +51,13 @@
 
 5. 客户端接收请求，在页面显示已发送聊天内容
 
+<div style="text-align: center">
 <img src="image/chat-send-flow.jpg" width="75%">
+</div>
 
+<div style="text-align: center">
 <img src="image/chat-send-uml.jpg" width="75%">
+</div>
 
 #### 消息列表
 
@@ -109,9 +115,13 @@
 
 3. 客户端接收响应信息，在聊天页面显示列表信息
 
+<div style="text-align: center">
 <img src="image/chat-list-flow.jpg" width="50%">
+</div>
 
+<div style="text-align: center">
 <img src="image/chat-list-uml.jpg" width="75%">
+</div>
 
 ## 设计亮点
 
