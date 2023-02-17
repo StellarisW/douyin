@@ -5,6 +5,7 @@ import (
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
 	"douyin/app/service/user/internal/user"
+	"douyin/app/service/user/internal/video"
 	"douyin/app/service/user/rpc/sys/internal/model/dao/entity"
 	"douyin/app/service/user/rpc/sys/pb"
 	"fmt"
@@ -34,7 +35,7 @@ func NewModel(db *gorm.DB, rdb *redis.ClusterClient) *DefaultModel {
 
 func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profile, errx.Error) {
 	userSubject := &entity.UserSubject{}
-	var followCnt, followerCnt int64
+	var followCnt, followerCnt, workCnt, favoriteCnt int64
 	var isFollow bool
 
 	err := mr.Finish(func() error {
@@ -83,6 +84,30 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 		}
 
 		return nil
+	}, func() error {
+		var err error
+		err = m.db.WithContext(ctx).
+			Model(&entity.VideoSubject{}).
+			Where("`user_id` = ?", dstUserId).
+			Count(&workCnt).Error
+		if err != nil {
+			if err != gorm.ErrRecordNotFound {
+				log.Logger.Error(errx.MysqlGet, zap.Error(err))
+				return errMysqlGet
+			}
+			workCnt = 0
+		}
+
+		return nil
+	}, func() error {
+		var err error
+		favoriteCnt, err = m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", video.RdbKeyFavorite, dstUserId)).Result()
+		if err != nil {
+			log.Logger.Error(errx.RedisGet, zap.Error(err))
+			return errRedisGet
+		}
+
+		return nil
 	})
 	if err != nil {
 		return nil, errx.New(errx.GetCode(err), err.Error())
@@ -94,6 +119,8 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 		FollowCount:   followCnt,
 		FollowerCount: followerCnt,
 		IsFollow:      isFollow,
+		WorkCount:     workCnt,
+		FavoriteCount: favoriteCnt,
 	}
 
 	return profile, nil

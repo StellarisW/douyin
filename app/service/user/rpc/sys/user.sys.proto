@@ -10,6 +10,8 @@ message Profile{
     int64 follow_count=3; // 关注总数
     int64 follower_count=4; // 粉丝总数
     bool is_follow=5; // true-已关注，false-未关注
+    int64 work_count=6; // 作品总数
+    int64 favorite_count=7; // 喜欢总数
 }
 
 message RegisterReq {

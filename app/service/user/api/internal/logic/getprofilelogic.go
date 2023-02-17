@@ -99,6 +99,8 @@ func (l *GetProfileLogic) GetProfile(req *types.GetProfileReq) (resp *types.GetP
 			FollowCount:   rpcRes.User.FollowCount,
 			FollowerCount: rpcRes.User.FollowerCount,
 			IsFollow:      rpcRes.User.IsFollow,
+			WorkCount:     rpcRes.User.WorkCount,
+			FavoriteCount: rpcRes.User.FavoriteCount,
 		},
 	}, nil
 }
