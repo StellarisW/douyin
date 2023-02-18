@@ -40,6 +40,14 @@ func (s *SysServer) GetPublishList(ctx context.Context, in *pb.GetPublishListReq
 	return res, err
 }
 
+func (s *SysServer) GetPublishCount(ctx context.Context, in *pb.GetPublishCountReq) (*pb.GetPublishCountRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewGetPublishCountLogic(ctx, s.svcCtx)
+	res, err := l.GetPublishCount(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
 func (s *SysServer) Feed(ctx context.Context, in *pb.FeedReq) (*pb.FeedRes, error) {
 	log.Logger.Debug("recv:", zap.String("msg", in.String()))
 	l := logic.NewFeedLogic(ctx, s.svcCtx)
@@ -60,6 +68,22 @@ func (s *SysServer) GetFavoriteList(ctx context.Context, in *pb.GetFavoriteListR
 	log.Logger.Debug("recv:", zap.String("msg", in.String()))
 	l := logic.NewGetFavoriteListLogic(ctx, s.svcCtx)
 	res, err := l.GetFavoriteList(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
+func (s *SysServer) GetFavoriteCount(ctx context.Context, in *pb.GetFavoriteCountReq) (*pb.GetFavoriteCountRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewGetFavoriteCountLogic(ctx, s.svcCtx)
+	res, err := l.GetFavoriteCount(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
+func (s *SysServer) GetTotalFavorite(ctx context.Context, in *pb.GetTotalFavoritedReq) (*pb.GetTotalFavoritedRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewGetTotalFavoritedLogic(ctx, s.svcCtx)
+	res, err := l.GetTotalFavorited(in)
 	log.Logger.Debug("send:", zap.String("msg", res.String()))
 	return res, err
 }

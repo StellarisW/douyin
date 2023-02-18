@@ -24,8 +24,11 @@ type (
 	Model interface {
 		Feed(ctx context.Context, latestTime int64, srcUserId int64) ([]*pb.Video, int64, errx.Error)
 		GetPublishList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Video, errx.Error)
+		GetPublishCount(ctx context.Context, userId int64) (int64, errx.Error)
 		GetFavoriteList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Video, errx.Error)
+		GetFavoriteCount(ctx context.Context, userId int64) (int64, errx.Error)
 		GetCommentList(ctx context.Context, userId, videoId int64) ([]*pb.Comment, errx.Error)
+		GetTotalFavorited(ctx context.Context, userId int64) (int64, errx.Error)
 	}
 	DefaultModel struct {
 		db               *gorm.DB
@@ -97,6 +100,24 @@ func (m *DefaultModel) GetPublishList(ctx context.Context, srcUserId, dstUserId 
 	return videos, nil
 }
 
+func (m *DefaultModel) GetPublishCount(ctx context.Context, userId int64) (int64, errx.Error) {
+	var publishCnt int64
+
+	err := m.db.WithContext(ctx).
+		Model(&entity.VideoSubject{}).
+		Where("`user_id` = ?", userId).
+		Count(&publishCnt).Error
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			log.Logger.Error(errx.MysqlGet, zap.Error(err))
+			return 0, errMysqlGet
+		}
+		publishCnt = 0
+	}
+
+	return publishCnt, nil
+}
+
 func (m *DefaultModel) GetFavoriteList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Video, errx.Error) {
 	videoIds, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", video.RdbKeyFavorite, dstUserId), 0, -1).Result()
 	if err != nil {
@@ -122,6 +143,16 @@ func (m *DefaultModel) GetFavoriteList(ctx context.Context, srcUserId, dstUserId
 	}
 
 	return videos, nil
+}
+
+func (m *DefaultModel) GetFavoriteCount(ctx context.Context, userId int64) (int64, errx.Error) {
+	favoriteCnt, err := m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", video.RdbKeyFavorite, userId)).Result()
+	if err != nil {
+		log.Logger.Error(errx.RedisGet, zap.Error(err))
+		return 0, errRedisGet
+	}
+
+	return favoriteCnt, nil
 }
 
 func (m *DefaultModel) GetCommentList(ctx context.Context, userId, videoId int64) ([]*pb.Comment, errx.Error) {
@@ -180,6 +211,51 @@ func (m *DefaultModel) GetCommentList(ctx context.Context, userId, videoId int64
 	}
 
 	return comments, nil
+}
+
+func (m *DefaultModel) GetTotalFavorited(ctx context.Context, userId int64) (int64, errx.Error) {
+	videoSubjects := make([]*entity.VideoSubject, 0)
+
+	err := m.db.WithContext(ctx).
+		Table(entity.TableNameVideoSubject).
+		Select("`id`").
+		Where("`user_id` = ?", userId).
+		Find(&videoSubjects).Error
+	if err != nil {
+		log.Logger.Error(errx.MysqlGet, zap.Error(err))
+		return 0, errMysqlGet
+	}
+
+	size := len(videoSubjects)
+
+	cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		for i := 0; i < size; i++ {
+			pipe.Get(ctx,
+				fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
+			)
+		}
+		return nil
+	})
+	if err != nil {
+		if err != redis.Nil {
+			log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+			return 0, errRedisPipeExec
+		}
+	}
+
+	var totalFavorited int64
+	for i := 0; i < size; i++ {
+		value, err := cmds[i].(*redis.StringCmd).Int64()
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisGet, zap.Error(err))
+				return 0, errRedisGet
+			}
+		}
+		totalFavorited += value
+	}
+
+	return totalFavorited, nil
 }
 
 func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, videoSubjects []*entity.VideoSubject) ([]*pb.Video, errx.Error) {
@@ -283,11 +359,14 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 			videos[i] = &pb.Video{
 				Id: videoSubjects[i].ID,
 				User: &pb.Profile{
-					Id:            videoSubjects[i].UserID,
-					Name:          rpcRes.User.Name,
-					FollowCount:   rpcRes.User.FollowCount,
-					FollowerCount: rpcRes.User.FollowerCount,
-					IsFollow:      rpcRes.User.IsFollow,
+					Id:             videoSubjects[i].UserID,
+					Name:           rpcRes.User.Name,
+					FollowCount:    rpcRes.User.FollowCount,
+					FollowerCount:  rpcRes.User.FollowerCount,
+					IsFollow:       rpcRes.User.IsFollow,
+					TotalFavorited: rpcRes.User.TotalFavorited,
+					WorkCount:      rpcRes.User.WorkCount,
+					FavoriteCount:  rpcRes.User.FavoriteCount,
 				},
 				PlayUrl:       videoSubjects[i].PlayURL,
 				CoverUrl:      videoSubjects[i].CoverURL,

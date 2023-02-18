@@ -10,6 +10,9 @@ message Profile{
     int64 follow_count=3; // 关注总数
     int64 follower_count=4; // 粉丝总数
     bool is_follow=5; // true-已关注，false-未关注
+    int64 total_favorited=6; // 获赞总数
+    int64 work_count=7; // 作品总数
+    int64 favorite_count=8; // 喜欢总数
 }
 message Video{
     int64 id=1; // 视频唯一标识
@@ -49,6 +52,15 @@ message GetPublishListRes{
     repeated Video videos = 3;
 }
 
+message GetPublishCountReq{
+    int64 user_id=1;
+}
+message GetPublishCountRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    int64 publish_count = 3;
+}
+
 message FeedReq{
     int64 latest_time=1;
     int64 user_id=2;
@@ -80,6 +92,15 @@ message GetFavoriteListRes{
     repeated Video videos = 3;
 }
 
+message GetFavoriteCountReq{
+    int64 user_id=1;
+}
+message GetFavoriteCountRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    int64 favorite_count = 3;
+}
+
 message CommentReq{
     int64 user_id=1;
     int64 video_id=2;
@@ -103,12 +124,24 @@ message GetCommentListRes{
     repeated Comment comments = 3;
 }
 
+message GetTotalFavoritedReq{
+    int64 user_id=1;
+}
+message GetTotalFavoritedRes{
+    uint32 status_code = 1;
+    string status_msg = 2;
+    int64 total_favorited = 3;
+}
+
 service Sys {
     rpc Publish (PublishReq) returns (PublishRes);
     rpc GetPublishList (GetPublishListReq) returns (GetPublishListRes);
+    rpc GetPublishCount (GetPublishCountReq) returns (GetPublishCountRes);
     rpc Feed (FeedReq) returns (FeedRes);
     rpc Favorite (FavoriteReq) returns (FavoriteRes);
     rpc GetFavoriteList (GetFavoriteListReq) returns (GetFavoriteListRes);
+    rpc GetFavoriteCount (GetFavoriteCountReq) returns (GetFavoriteCountRes);
     rpc Comment (CommentReq) returns (CommentRes);
     rpc GetCommentList (GetCommentListReq) returns (GetCommentListRes);
+    rpc GetTotalFavorited (GetTotalFavoritedReq) returns (GetTotalFavoritedRes);
 }
