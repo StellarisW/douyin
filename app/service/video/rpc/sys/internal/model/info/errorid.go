@@ -5,8 +5,11 @@ const (
 
 	ErrIdOprFeed = iota
 	ErrIdOprGetPublishList
+	ErrIdOprGetPublishCount
 	ErrIdOprGetFavoriteList
+	ErrIdOprGetFavoriteCount
 	ErrIdOprGetCommentList
+	ErrIdOprGetTotalFavorited
 )
 
 // 通用错误

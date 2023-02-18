@@ -10,6 +10,8 @@ const (
 	// 通用错误
 
 	ErrIdMysqlGet = iota
+	ErrIdRequestRpcRes
+	ErrIdRequestRpcReceive
 	ErrIdRedisGet
 	ErrIdCommon
 )

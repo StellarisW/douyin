@@ -5,9 +5,10 @@ import (
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
 	"douyin/app/service/user/internal/user"
-	"douyin/app/service/user/internal/video"
 	"douyin/app/service/user/rpc/sys/internal/model/dao/entity"
 	"douyin/app/service/user/rpc/sys/pb"
+	videopb "douyin/app/service/video/rpc/sys/pb"
+	videosys "douyin/app/service/video/rpc/sys/sys"
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/zeromicro/go-zero/core/mr"
@@ -21,8 +22,9 @@ type (
 		GetProfile(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profile, errx.Error)
 	}
 	DefaultModel struct {
-		db  *gorm.DB
-		rdb *redis.ClusterClient
+		db                *gorm.DB
+		rdb               *redis.ClusterClient
+		videoSysRpcClient videosys.Sys
 	}
 )
 
@@ -35,7 +37,7 @@ func NewModel(db *gorm.DB, rdb *redis.ClusterClient) *DefaultModel {
 
 func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profile, errx.Error) {
 	userSubject := &entity.UserSubject{}
-	var followCnt, followerCnt, workCnt, favoriteCnt int64
+	var followCnt, followerCnt, workCnt, favoriteCnt, totalFavorited int64
 	var isFollow bool
 
 	err := mr.Finish(func() error {
@@ -85,27 +87,48 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 
 		return nil
 	}, func() error {
-		var err error
-		err = m.db.WithContext(ctx).
-			Model(&entity.VideoSubject{}).
-			Where("`user_id` = ?", dstUserId).
-			Count(&workCnt).Error
-		if err != nil {
-			if err != gorm.ErrRecordNotFound {
-				log.Logger.Error(errx.MysqlGet, zap.Error(err))
-				return errMysqlGet
-			}
-			workCnt = 0
+		rpcRes, _ := m.videoSysRpcClient.GetPublishCount(ctx, &videopb.GetPublishCountReq{
+			UserId: dstUserId,
+		})
+		if rpcRes == nil {
+			log.Logger.Error(errx.RequestRpcReceive)
+			return errRequestRpcReceive
 		}
+		if rpcRes.StatusCode != 0 {
+			log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
+			return errRequestRpcRes
+		}
+		workCnt = rpcRes.PublishCount
 
 		return nil
 	}, func() error {
-		var err error
-		favoriteCnt, err = m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", video.RdbKeyFavorite, dstUserId)).Result()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return errRedisGet
+		rpcRes, _ := m.videoSysRpcClient.GetFavoriteCount(ctx, &videopb.GetFavoriteCountReq{
+			UserId: dstUserId,
+		})
+		if rpcRes == nil {
+			log.Logger.Error(errx.RequestRpcReceive)
+			return errRequestRpcReceive
 		}
+		if rpcRes.StatusCode != 0 {
+			log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
+			return errRequestRpcRes
+		}
+		favoriteCnt = rpcRes.FavoriteCount
+
+		return nil
+	}, func() error {
+		rpcRes, _ := m.videoSysRpcClient.GetTotalFavorited(ctx, &videopb.GetTotalFavoritedReq{
+			UserId: dstUserId,
+		})
+		if rpcRes == nil {
+			log.Logger.Error(errx.RequestRpcReceive)
+			return errRequestRpcReceive
+		}
+		if rpcRes.StatusCode != 0 {
+			log.Logger.Error(errx.RequestRpcRes, zap.Uint32("code", rpcRes.StatusCode))
+			return errRequestRpcRes
+		}
+		totalFavorited = rpcRes.TotalFavorited
 
 		return nil
 	})
@@ -114,13 +137,14 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 	}
 
 	profile := &pb.Profile{
-		Id:            userSubject.ID,
-		Name:          userSubject.Username,
-		FollowCount:   followCnt,
-		FollowerCount: followerCnt,
-		IsFollow:      isFollow,
-		WorkCount:     workCnt,
-		FavoriteCount: favoriteCnt,
+		Id:             userSubject.ID,
+		Name:           userSubject.Username,
+		FollowCount:    followCnt,
+		FollowerCount:  followerCnt,
+		IsFollow:       isFollow,
+		TotalFavorited: totalFavorited,
+		WorkCount:      workCnt,
+		FavoriteCount:  favoriteCnt,
 	}
 
 	return profile, nil
