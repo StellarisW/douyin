@@ -59,6 +59,8 @@ func (l *GetMessageLogic) GetMessage(in *pb.GetMessageReq) (*pb.GetMessageRes, e
 	for _, message := range chatMessages {
 		messages = append(messages, &pb.Message{
 			Id:         message.ID,
+			ToUserId:   in.DstUserId,
+			FromUserId: in.SrcUserId,
 			Content:    message.Content,
 			CreateTime: message.UpdateTime.Format("2006-01-02 15:04:05"),
 		})
