@@ -35,7 +35,7 @@ func NewModel(db *gorm.DB, rdb *redis.ClusterClient) *DefaultModel {
 
 func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profile, errx.Error) {
 	userSubject := &entity.UserSubject{}
-	var followCnt, followerCnt, workCnt, favoriteCnt int64
+	var followCnt, followerCnt, totalFavorited, workCnt, favoriteCnt int64
 	var isFollow bool
 
 	err := mr.Finish(func() error {
@@ -86,6 +86,49 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 		return nil
 	}, func() error {
 		var err error
+		videoSubjects := make([]*entity.VideoSubject, 0)
+
+		err = m.db.WithContext(ctx).
+			Table(entity.TableNameVideoSubject).
+			Select("`id`").
+			Where("`user_id` = ?", dstUserId).
+			Find(&videoSubjects).Error
+		if err != nil {
+			log.Logger.Error(errx.MysqlGet, zap.Error(err))
+			return errMysqlGet
+		}
+
+		size := len(videoSubjects)
+
+		cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+			for i := 0; i < size; i++ {
+				pipe.Get(ctx,
+					fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
+				)
+			}
+			return nil
+		})
+		if err != nil {
+			if err != redis.Nil {
+				log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+				return errRedisPipeExec
+			}
+		}
+
+		for i := 0; i < size; i++ {
+			value, err := cmds[i].(*redis.StringCmd).Int64()
+			if err != nil {
+				if err != redis.Nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					return errRedisGet
+				}
+			}
+			totalFavorited += value
+		}
+
+		return nil
+	}, func() error {
+		var err error
 		err = m.db.WithContext(ctx).
 			Model(&entity.VideoSubject{}).
 			Where("`user_id` = ?", dstUserId).
@@ -114,13 +157,14 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 	}
 
 	profile := &pb.Profile{
-		Id:            userSubject.ID,
-		Name:          userSubject.Username,
-		FollowCount:   followCnt,
-		FollowerCount: followerCnt,
-		IsFollow:      isFollow,
-		WorkCount:     workCnt,
-		FavoriteCount: favoriteCnt,
+		Id:             userSubject.ID,
+		Name:           userSubject.Username,
+		FollowCount:    followCnt,
+		FollowerCount:  followerCnt,
+		IsFollow:       isFollow,
+		TotalFavorited: totalFavorited,
+		WorkCount:      workCnt,
+		FavoriteCount:  favoriteCnt,
 	}
 
 	return profile, nil

@@ -11,6 +11,7 @@ const (
 
 	ErrIdMysqlGet = iota
 	ErrIdRedisGet
+	ErrIdRedisPipeExec
 	ErrIdCommon
 )
 
