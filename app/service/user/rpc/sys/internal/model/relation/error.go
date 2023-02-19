@@ -17,6 +17,7 @@ var (
 var (
 	// Relation 操作
 
+	errUserNotFound      = errx.New(ErrIdUserNotFound, ErrUserNotFound)
 	errInvalidActionType = errx.New(ErrIdInvalidActionType, ErrInvalidActionType)
 	errAlreadyFollow     = errx.New(ErrIdAlreadyFollow, ErrAlreadyFollow)
 	errAlreadyUnfollow   = errx.New(ErrIdAlreadyUnfollow, ErrAlreadyUnfollow)

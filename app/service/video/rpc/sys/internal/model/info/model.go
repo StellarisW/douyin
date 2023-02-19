@@ -71,7 +71,14 @@ func (m *DefaultModel) Feed(ctx context.Context, latestTime int64, srcUserId int
 		return nil, 0, erx
 	}
 
-	return videos, videoSubjects[len(videoSubjects)-1].UpdateTime.Unix(), nil
+	var lateTime int64
+	if len(videos) > 0 {
+		latestTime = videoSubjects[len(videoSubjects)-1].UpdateTime.Unix()
+	} else {
+		lateTime = latestTime
+	}
+
+	return videos, lateTime, nil
 }
 
 func (m *DefaultModel) GetPublishList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Video, errx.Error) {
@@ -161,11 +168,17 @@ func (m *DefaultModel) GetCommentList(ctx context.Context, userId, videoId int64
 			comments[i] = &pb.Comment{
 				Id: commentSubjects[i].ID,
 				User: &pb.Profile{
-					Id:            commentSubjects[i].UserID,
-					Name:          rpcRes.User.Name,
-					FollowCount:   rpcRes.User.FollowCount,
-					FollowerCount: rpcRes.User.FollowerCount,
-					IsFollow:      rpcRes.User.IsFollow,
+					Id:              commentSubjects[i].UserID,
+					Name:            rpcRes.User.Name,
+					FollowCount:     rpcRes.User.FollowCount,
+					FollowerCount:   rpcRes.User.FollowerCount,
+					IsFollow:        rpcRes.User.IsFollow,
+					Avatar:          rpcRes.User.Avatar,
+					BackgroundImage: rpcRes.User.BackgroundImage,
+					Signature:       rpcRes.User.Signature,
+					TotalFavorited:  rpcRes.User.TotalFavorited,
+					WorkCount:       rpcRes.User.WorkCount,
+					FavoriteCount:   rpcRes.User.FavoriteCount,
 				},
 				Content:    commentSubjects[i].CommentText,
 				CreateDate: commentSubjects[i].CreateTime.Format("01-02"),
@@ -283,14 +296,17 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 			videos[i] = &pb.Video{
 				Id: videoSubjects[i].ID,
 				Author: &pb.Profile{
-					Id:             videoSubjects[i].UserID,
-					Name:           rpcRes.User.Name,
-					FollowCount:    rpcRes.User.FollowCount,
-					FollowerCount:  rpcRes.User.FollowerCount,
-					IsFollow:       rpcRes.User.IsFollow,
-					TotalFavorited: rpcRes.User.TotalFavorited,
-					WorkCount:      rpcRes.User.WorkCount,
-					FavoriteCount:  rpcRes.User.FavoriteCount,
+					Id:              videoSubjects[i].UserID,
+					Name:            rpcRes.User.Name,
+					FollowCount:     rpcRes.User.FollowCount,
+					FollowerCount:   rpcRes.User.FollowerCount,
+					IsFollow:        rpcRes.User.IsFollow,
+					Avatar:          rpcRes.User.Avatar,
+					BackgroundImage: rpcRes.User.BackgroundImage,
+					Signature:       rpcRes.User.Signature,
+					TotalFavorited:  rpcRes.User.TotalFavorited,
+					WorkCount:       rpcRes.User.WorkCount,
+					FavoriteCount:   rpcRes.User.FavoriteCount,
 				},
 				PlayUrl:       videoSubjects[i].PlayURL,
 				CoverUrl:      videoSubjects[i].CoverURL,

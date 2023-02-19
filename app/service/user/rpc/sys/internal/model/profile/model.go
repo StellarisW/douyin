@@ -157,14 +157,17 @@ func (m *DefaultModel) GetProfile(ctx context.Context, srcUserId, dstUserId int6
 	}
 
 	profile := &pb.Profile{
-		Id:             userSubject.ID,
-		Name:           userSubject.Username,
-		FollowCount:    followCnt,
-		FollowerCount:  followerCnt,
-		IsFollow:       isFollow,
-		TotalFavorited: totalFavorited,
-		WorkCount:      workCnt,
-		FavoriteCount:  favoriteCnt,
+		Id:              userSubject.ID,
+		Name:            userSubject.Username,
+		FollowCount:     followCnt,
+		FollowerCount:   followerCnt,
+		IsFollow:        isFollow,
+		Avatar:          "",
+		BackgroundImage: "",
+		Signature:       "",
+		TotalFavorited:  totalFavorited,
+		WorkCount:       workCnt,
+		FavoriteCount:   favoriteCnt,
 	}
 
 	return profile, nil

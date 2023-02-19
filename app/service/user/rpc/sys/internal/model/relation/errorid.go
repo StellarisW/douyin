@@ -28,10 +28,12 @@ const (
 	ErrIdInvalidActionType = iota + ErrIdCommon
 	ErrIdAlreadyFollow
 	ErrIdAlreadyUnfollow
+	ErrIdUserNotFound
 )
 
 const (
 	ErrInvalidActionType = "invalid action type"
 	ErrAlreadyFollow     = "already followed"
 	ErrAlreadyUnfollow   = "already unfollowed"
+	ErrUserNotFound      = "user not found"
 )

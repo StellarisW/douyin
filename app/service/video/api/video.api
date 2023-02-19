@@ -2,14 +2,17 @@ syntax = "v1"
 
 type (
 	Profile {
-		Id             int64  `json:"id"`
-		Name           string `json:"name"`
-		FollowCount    uint64 `json:"follow_count"`
-		FollowerCount  uint64 `json:"follower_count"`
-		IsFollow       bool   `json:"is_follow"`
-		TotalFavorited uint64 `json:"total_favorited"`
-		WorkCount      uint64 `json:"work_count"`
-		FavoriteCount  uint64 `json:"favorite_count"`
+		Id              int64  `json:"id"`               // 用户id
+		Name            string `json:"name"`             // 用户名称
+		FollowCount     int64  `json:"follow_count"`     // 关注总数
+		FollowerCount   int64  `json:"follower_count"`   // 粉丝总数
+		IsFollow        bool   `json:"is_follow"`        // true-已关注，false-未关注
+		Avatar          string `json:"avatar"`           // 头像
+		BackgroundImage string `json:"background_image"` // 背景大图
+		Signature       string `json:"signature"`        // 简介
+		TotalFavorited  int64  `json:"total_favorited"`  // 获赞数量
+		WorkCount       int64  `json:"work_count"`       // 作品总数
+		FavoriteCount   int64  `json:"favorite_count"`   // 喜欢总数
 	}
 
 	Video {
