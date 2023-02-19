@@ -282,12 +282,15 @@ func (m *DefaultModel) getVideosInfo(ctx context.Context, srcUserId int64, video
 
 			videos[i] = &pb.Video{
 				Id: videoSubjects[i].ID,
-				User: &pb.Profile{
-					Id:            videoSubjects[i].UserID,
-					Name:          rpcRes.User.Name,
-					FollowCount:   rpcRes.User.FollowCount,
-					FollowerCount: rpcRes.User.FollowerCount,
-					IsFollow:      rpcRes.User.IsFollow,
+				Author: &pb.Profile{
+					Id:             videoSubjects[i].UserID,
+					Name:           rpcRes.User.Name,
+					FollowCount:    rpcRes.User.FollowCount,
+					FollowerCount:  rpcRes.User.FollowerCount,
+					IsFollow:       rpcRes.User.IsFollow,
+					TotalFavorited: rpcRes.User.TotalFavorited,
+					WorkCount:      rpcRes.User.WorkCount,
+					FavoriteCount:  rpcRes.User.FavoriteCount,
 				},
 				PlayUrl:       videoSubjects[i].PlayURL,
 				CoverUrl:      videoSubjects[i].CoverURL,

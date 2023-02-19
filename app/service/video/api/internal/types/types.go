@@ -2,11 +2,14 @@
 package types
 
 type Profile struct {
-	Id            int64  `json:"id"`
-	Name          string `json:"name"`
-	FollowCount   uint64 `json:"follow_count"`
-	FollowerCount uint64 `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
+	Id             int64  `json:"id"`
+	Name           string `json:"name"`
+	FollowCount    uint64 `json:"follow_count"`
+	FollowerCount  uint64 `json:"follower_count"`
+	IsFollow       bool   `json:"is_follow"`
+	TotalFavorited uint64 `json:"total_favorited"`
+	WorkCount      uint64 `json:"work_count"`
+	FavoriteCount  uint64 `json:"favorite_count"`
 }
 
 type Video struct {
@@ -28,25 +31,25 @@ type Comment struct {
 }
 
 type FeedReq struct {
-	LastestTime string `form:"latest_time,optional"`
-	Token       string `form:"token,optional"`
+	LastestTime string `form:"latest_time,optional"` // 可选参数，限制返回视频的最新投稿时间戳，精确到秒，不填表示当前时间
+	Token       string `form:"token,optional"`       // 可选参数，登录用户设置
 }
 
 type FeedRes struct {
-	StatusCode uint32      `json:"status_code"`
-	StatusMsg  string      `json:"status_msg"`
-	NextTime   int64       `json:"next_time,omitempty"`
-	VideoList  interface{} `json:"video_list,omitempty"`
+	StatusCode uint32      `json:"status_code"`          // 状态码，0-成功，其他值-失败
+	StatusMsg  string      `json:"status_msg"`           // 返回状态描述
+	NextTime   int64       `json:"next_time,omitempty"`  // 本次返回的视频中，发布最早的时间，作为下次请求时的latest_time
+	VideoList  interface{} `json:"video_list,omitempty"` // 视频列表
 }
 
 type PublishReq struct {
-	Token string `form:"token"`
-	Title string `form:"title"`
+	Token string `form:"token"` // 用户鉴权token
+	Title string `form:"title"` // 视频标题
 }
 
 type PublishRes struct {
-	StatusCode uint32 `json:"status_code"`
-	StatusMsg  string `json:"status_msg"`
+	StatusCode uint32 `json:"status_code"` // 状态码，0-成功，其他值-失败
+	StatusMsg  string `json:"status_msg"`  // 返回状态描述
 }
 
 type GetPublishListReq struct {
@@ -61,48 +64,48 @@ type GetPublishListRes struct {
 }
 
 type FavoriteReq struct {
-	Token      string `form:"token"`
-	VideoId    string `form:"video_id"`
-	ActionType string `form:"action_type"`
+	Token      string `form:"token"`       // 用户鉴权token
+	VideoId    string `form:"video_id"`    // 视频id
+	ActionType string `form:"action_type"` // 1-点赞，2-取消点赞
 }
 
 type FavoriteRes struct {
-	StatusCode uint32 `json:"status_code"`
-	StatusMsg  string `json:"status_msg"`
+	StatusCode uint32 `json:"status_code"` // 状态码，0-成功，其他值-失败
+	StatusMsg  string `json:"status_msg"`  // 返回状态描述
 }
 
 type GetFavoriteListReq struct {
-	UserId string `form:"user_id"`
-	Token  string `form:"token"`
+	UserId string `form:"user_id"` // 用户id
+	Token  string `form:"token"`   // 用户鉴权token
 }
 
 type GetFavoriteListRes struct {
-	StatusCode uint32      `json:"status_code"`
-	StatusMsg  string      `json:"status_msg"`
-	VideoList  interface{} `json:"video_list,omitempty"`
+	StatusCode uint32      `json:"status_code"`          // 状态码，0-成功，其他值-失败
+	StatusMsg  string      `json:"status_msg"`           // 返回状态描述
+	VideoList  interface{} `json:"video_list,omitempty"` // 用户点赞视频列表
 }
 
 type CommentReq struct {
-	Token       string `form:"token"`
-	VideoId     string `form:"video_id"`
-	ActionType  string `form:"action_type"`
-	CommentText string `form:"comment_text,optional"`
-	CommentId   string `form:"comment_id,optional"`
+	Token       string `form:"token"`                 // 用户鉴权token
+	VideoId     string `form:"video_id"`              // 视频id
+	ActionType  string `form:"action_type"`           // 1-发布评论，2-删除评论
+	CommentText string `form:"comment_text,optional"` // 用户填写的评论内容，在action_type=1的时候使用
+	CommentId   string `form:"comment_id,optional"`   // 要删除的评论id，在action_type=2的时候使用
 }
 
 type CommentRes struct {
-	StatusCode uint32      `json:"status_code"`
-	StatusMsg  string      `json:"status_msg"`
-	Comment    interface{} `json:"comment,omitempty"`
+	StatusCode uint32      `json:"status_code"`       // 状态码，0-成功，其他值-失败
+	StatusMsg  string      `json:"status_msg"`        // 返回状态描述
+	Comment    interface{} `json:"comment,omitempty"` // 评论成功返回评论内容，不需要重新拉取整个列表
 }
 
 type GetCommentListReq struct {
-	Token   string `form:"token"`
-	VideoId string `form:"video_id"`
+	Token   string `form:"token"`    // 用户鉴权token
+	VideoId string `form:"video_id"` // 视频id
 }
 
 type GetCommentListRes struct {
-	StatusCode  uint32      `json:"status_code"`
-	StatusMsg   string      `json:"status_msg"`
-	CommentList interface{} `json:"comment_list,omitempty"`
+	StatusCode  uint32      `json:"status_code"`            // 状态码，0-成功，其他值-失败
+	StatusMsg   string      `json:"status_msg"`             // 返回状态描述
+	CommentList interface{} `json:"comment_list,omitempty"` // 评论列表
 }
