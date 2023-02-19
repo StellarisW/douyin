@@ -24,10 +24,10 @@ type Video struct {
 }
 
 type Comment struct {
-	Id         int64    `json:"id"`
-	User       *Profile `json:"user"`
-	Content    string   `json:"content"`
-	CreateDate string   `json:"create_date"`
+	Id         int64  `json:"id"`
+	User       int64  `json:"user"`
+	Content    string `json:"content"`
+	CreateDate string `json:"create_date"`
 }
 
 type FeedReq struct {

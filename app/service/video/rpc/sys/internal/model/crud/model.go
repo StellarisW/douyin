@@ -163,7 +163,7 @@ func (m *DefaultModel) Comment(ctx context.Context, userId, videoId int64, actio
 		// 发布评论
 
 		commentSubject := &entity.CommentSubject{
-			ID:          m.idGenerator.NewLong(),
+			ID:          commentId,
 			UserID:      userId,
 			VideoID:     videoId,
 			CommentText: commentText,

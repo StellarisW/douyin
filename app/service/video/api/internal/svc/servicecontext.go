@@ -8,6 +8,7 @@ import (
 	"douyin/app/service/video/rpc/sys/sys"
 	"github.com/StellarisW/go-sensitive"
 	"github.com/minio/minio-go/v7"
+	"github.com/yitter/idgenerator-go/idgen"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 	"go.uber.org/zap"
@@ -24,6 +25,8 @@ type ServiceContext struct {
 
 	Filter *sensitive.Manager
 
+	IdGenerator *idgen.DefaultIdGenerator
+
 	MinioClient *minio.Client
 }
 
@@ -39,6 +42,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	err := filterManager.GetStore().LoadDictPath("./manifest/config/dict/default_dict.txt")
 	if err != nil {
 		log.Logger.Fatal("initialize filter failed", zap.Error(err))
+	}
+
+	idGenerator, err := apollo.Database().NewIdGenerator("video.yaml")
+	if err != nil {
+		log.Logger.Fatal(errx.GetIdGenerator, zap.Error(err))
 	}
 
 	corsMiddleware, err := apollo.Middleware().NewCORSMiddleware()
@@ -74,6 +82,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		),
 
 		Filter: filterManager,
+
+		IdGenerator: idGenerator,
 
 		MinioClient: minioClient,
 	}

@@ -11,8 +11,10 @@ import (
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
+	"fmt"
 	"go.uber.org/zap"
 	"strconv"
+	"time"
 
 	"douyin/app/service/video/api/internal/svc"
 	"douyin/app/service/video/api/internal/types"
@@ -82,7 +84,10 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		}, nil
 	}
 
+	_, m, d := time.Now().Date()
+
 	var videoId, commentId int64
+	var commentContent string
 
 	videoId, err = strconv.ParseInt(req.VideoId, 10, 64)
 	if err != nil {
@@ -100,6 +105,10 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		}, nil
 	}
 
+	if actionType == 1 {
+		commentId = l.svcCtx.IdGenerator.NewLong()
+		commentContent = l.svcCtx.Filter.GetFilter().Replace(req.CommentText, '*')
+	}
 	if actionType == 2 {
 		commentId, err = strconv.ParseInt(req.CommentId, 10, 64)
 		if err != nil {
@@ -139,7 +148,7 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		UserId:      userId,
 		VideoId:     videoId,
 		ActionType:  uint32(actionType),
-		CommentText: l.svcCtx.Filter.GetFilter().Replace(req.CommentText, '*'),
+		CommentText: commentContent,
 		CommentId:   commentId,
 	})
 	if err != nil {
@@ -158,8 +167,34 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		}, nil
 	}
 
+	if actionType == 1 {
+		return &types.CommentRes{
+			StatusCode: 0,
+			StatusMsg:  "comment successfully",
+			Comment: &types.Comment{
+				Id:         commentId,
+				User:       userId,
+				Content:    commentContent,
+				CreateDate: fmt.Sprintf("%02d-%02d", m, d),
+			},
+		}, nil
+	}
+	if actionType == 2 {
+		return &types.CommentRes{
+			StatusCode: 0,
+			StatusMsg:  "delete comment successfully",
+		}, nil
+	}
 	return &types.CommentRes{
-		StatusCode: 0,
-		StatusMsg:  "comment successfully",
+		StatusCode: errx.Encode(
+			errx.Logic,
+			sys.SysId,
+			douyin.Api,
+			sys.ServiceIdApi,
+			consts.ErrIdLogicCrud,
+			crud.ErrIdOprComment,
+			crud.ErrIdInvalidActionType,
+		),
+		StatusMsg: crud.ErrInvalidActionType,
 	}, nil
 }

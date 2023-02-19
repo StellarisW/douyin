@@ -128,14 +128,14 @@ type Video struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id            int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                                            // 视频唯一标识
-	Author        *Profile `protobuf:"bytes,2,opt,name=author,proto3" json:"author,omitempty"`                                     // 视频作者信息
-	PlayUrl       string   `protobuf:"bytes,3,opt,name=play_url,json=playUrl,proto3" json:"play_url,omitempty"`                    // 视频播放地址
-	CoverUrl      string   `protobuf:"bytes,4,opt,name=cover_url,json=coverUrl,proto3" json:"cover_url,omitempty"`                 // 视频封面地址
-	FavoriteCount int64    `protobuf:"varint,5,opt,name=favorite_count,json=favoriteCount,proto3" json:"favorite_count,omitempty"` // 视频的点赞总数
-	CommentCount  int64    `protobuf:"varint,6,opt,name=comment_count,json=commentCount,proto3" json:"comment_count,omitempty"`    // 视频的评论总数
-	IsFavorite    bool     `protobuf:"varint,7,opt,name=is_favorite,json=isFavorite,proto3" json:"is_favorite,omitempty"`          // true-已点赞，false-未点赞
-	Title         string   `protobuf:"bytes,8,opt,name=title,proto3" json:"title,omitempty"`                                       // 视频标题
+	Id            int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id"`                                            // 视频唯一标识
+	Author        *Profile `protobuf:"bytes,2,opt,name=author,proto3" json:"author"`                                     // 视频作者信息
+	PlayUrl       string   `protobuf:"bytes,3,opt,name=play_url,json=playUrl,proto3" json:"play_url"`                    // 视频播放地址
+	CoverUrl      string   `protobuf:"bytes,4,opt,name=cover_url,json=coverUrl,proto3" json:"cover_url"`                 // 视频封面地址
+	FavoriteCount int64    `protobuf:"varint,5,opt,name=favorite_count,json=favoriteCount,proto3" json:"favorite_count"` // 视频的点赞总数
+	CommentCount  int64    `protobuf:"varint,6,opt,name=comment_count,json=commentCount,proto3" json:"comment_count"`    // 视频的评论总数
+	IsFavorite    bool     `protobuf:"varint,7,opt,name=is_favorite,json=isFavorite,proto3" json:"is_favorite"`          // true-已点赞，false-未点赞
+	Title         string   `protobuf:"bytes,8,opt,name=title,proto3" json:"title"`                                       // 视频标题
 }
 
 func (x *Video) Reset() {
@@ -231,10 +231,10 @@ type Comment struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id         int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                                  // 视频评论id
-	User       *Profile `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`                               // 评论用户信息
-	Content    string   `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`                         // 评论内容
-	CreateDate string   `protobuf:"bytes,4,opt,name=create_date,json=createDate,proto3" json:"create_date,omitempty"` // 评论发布日期，格式 mm-dd
+	Id         int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id"`                                  // 视频评论id
+	User       *Profile `protobuf:"bytes,2,opt,name=user,proto3" json:"user",omitempty`                     // 评论用户信息
+	Content    string   `protobuf:"bytes,3,opt,name=content,proto3" json:"content"`                         // 评论内容
+	CreateDate string   `protobuf:"bytes,4,opt,name=create_date,json=createDate,proto3" json:"create_date"` // 评论发布日期，格式 mm-dd
 }
 
 func (x *Comment) Reset() {
@@ -302,8 +302,8 @@ type PublishReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserId int64  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Title  string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	UserId int64  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id"`
+	Title  string `protobuf:"bytes,2,opt,name=title,proto3" json:"title"`
 }
 
 func (x *PublishReq) Reset() {
@@ -357,8 +357,8 @@ type PublishRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StatusCode uint32 `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	StatusMsg  string `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg,omitempty"`
+	StatusCode uint32 `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code"`
+	StatusMsg  string `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg"`
 	VideoId    int64  `protobuf:"varint,3,opt,name=video_id,json=videoId,proto3" json:"video_id,omitempty"`
 }
 
@@ -420,8 +420,8 @@ type GetPublishListReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SrcUserId int64 `protobuf:"varint,1,opt,name=src_user_id,json=srcUserId,proto3" json:"src_user_id,omitempty"`
-	DstUserId int64 `protobuf:"varint,2,opt,name=dst_user_id,json=dstUserId,proto3" json:"dst_user_id,omitempty"`
+	SrcUserId int64 `protobuf:"varint,1,opt,name=src_user_id,json=srcUserId,proto3" json:"src_user_id"`
+	DstUserId int64 `protobuf:"varint,2,opt,name=dst_user_id,json=dstUserId,proto3" json:"dst_user_id"`
 }
 
 func (x *GetPublishListReq) Reset() {
@@ -475,8 +475,8 @@ type GetPublishListRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg,omitempty"`
+	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code"`
+	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg"`
 	Videos     []*Video `protobuf:"bytes,3,rep,name=videos,proto3" json:"videos,omitempty"`
 }
 
@@ -539,7 +539,7 @@ type FeedReq struct {
 	unknownFields protoimpl.UnknownFields
 
 	LatestTime int64 `protobuf:"varint,1,opt,name=latest_time,json=latestTime,proto3" json:"latest_time,omitempty"`
-	UserId     int64 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId     int64 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id"`
 }
 
 func (x *FeedReq) Reset() {
@@ -593,8 +593,8 @@ type FeedRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg,omitempty"`
+	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code"`
+	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg"`
 	Videos     []*Video `protobuf:"bytes,3,rep,name=videos,proto3" json:"videos,omitempty"`
 	NextTime   int64    `protobuf:"varint,4,opt,name=next_time,json=nextTime,proto3" json:"next_time,omitempty"`
 }
@@ -664,9 +664,9 @@ type FavoriteReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserId     int64  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	VideoId    int64  `protobuf:"varint,2,opt,name=video_id,json=videoId,proto3" json:"video_id,omitempty"`
-	ActionType uint32 `protobuf:"varint,3,opt,name=action_type,json=actionType,proto3" json:"action_type,omitempty"`
+	UserId     int64  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id"`
+	VideoId    int64  `protobuf:"varint,2,opt,name=video_id,json=videoId,proto3" json:"video_id"`
+	ActionType uint32 `protobuf:"varint,3,opt,name=action_type,json=actionType,proto3" json:"action_type"`
 }
 
 func (x *FavoriteReq) Reset() {
@@ -727,8 +727,8 @@ type FavoriteRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StatusCode uint32 `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	StatusMsg  string `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg,omitempty"`
+	StatusCode uint32 `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code"`
+	StatusMsg  string `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg"`
 }
 
 func (x *FavoriteRes) Reset() {
@@ -782,8 +782,8 @@ type GetFavoriteListReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SrcUserId int64 `protobuf:"varint,1,opt,name=src_user_id,json=srcUserId,proto3" json:"src_user_id,omitempty"`
-	DstUserId int64 `protobuf:"varint,2,opt,name=dst_user_id,json=dstUserId,proto3" json:"dst_user_id,omitempty"`
+	SrcUserId int64 `protobuf:"varint,1,opt,name=src_user_id,json=srcUserId,proto3" json:"src_user_id"`
+	DstUserId int64 `protobuf:"varint,2,opt,name=dst_user_id,json=dstUserId,proto3" json:"dst_user_id"`
 }
 
 func (x *GetFavoriteListReq) Reset() {
@@ -837,8 +837,8 @@ type GetFavoriteListRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg,omitempty"`
+	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code"`
+	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg"`
 	Videos     []*Video `protobuf:"bytes,3,rep,name=videos,proto3" json:"videos,omitempty"`
 }
 
@@ -900,9 +900,9 @@ type CommentReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserId      int64  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	VideoId     int64  `protobuf:"varint,2,opt,name=video_id,json=videoId,proto3" json:"video_id,omitempty"`
-	ActionType  uint32 `protobuf:"varint,3,opt,name=action_type,json=actionType,proto3" json:"action_type,omitempty"`
+	UserId      int64  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id"`
+	VideoId     int64  `protobuf:"varint,2,opt,name=video_id,json=videoId,proto3" json:"video_id"`
+	ActionType  uint32 `protobuf:"varint,3,opt,name=action_type,json=actionType,proto3" json:"action_type"`
 	CommentText string `protobuf:"bytes,4,opt,name=comment_text,json=commentText,proto3" json:"comment_text,omitempty"`
 	CommentId   int64  `protobuf:"varint,5,opt,name=comment_id,json=commentId,proto3" json:"comment_id,omitempty"`
 }
@@ -979,9 +979,9 @@ type CommentRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg,omitempty"`
-	Comment    *Comment `protobuf:"bytes,3,opt,name=comment,proto3" json:"comment,omitempty"`
+	StatusCode uint32   `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code"`
+	StatusMsg  string   `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg"`
+	Comment    *Comment `protobuf:"bytes,3,opt,name=comment,proto3" json:"comment"`
 }
 
 func (x *CommentRes) Reset() {
@@ -1042,8 +1042,8 @@ type GetCommentListReq struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	UserId  int64 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	VideoId int64 `protobuf:"varint,2,opt,name=video_id,json=videoId,proto3" json:"video_id,omitempty"`
+	UserId  int64 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id"`
+	VideoId int64 `protobuf:"varint,2,opt,name=video_id,json=videoId,proto3" json:"video_id"`
 }
 
 func (x *GetCommentListReq) Reset() {
@@ -1097,8 +1097,8 @@ type GetCommentListRes struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StatusCode uint32     `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	StatusMsg  string     `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg,omitempty"`
+	StatusCode uint32     `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code"`
+	StatusMsg  string     `protobuf:"bytes,2,opt,name=status_msg,json=statusMsg,proto3" json:"status_msg"`
 	Comments   []*Comment `protobuf:"bytes,3,rep,name=comments,proto3" json:"comments,omitempty"`
 }
 
