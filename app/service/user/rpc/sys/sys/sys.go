@@ -13,6 +13,7 @@ import (
 )
 
 type (
+	FriendProfile      = pb.FriendProfile
 	GetFollowListReq   = pb.GetFollowListReq
 	GetFollowListRes   = pb.GetFollowListRes
 	GetFollowerListReq = pb.GetFollowerListReq

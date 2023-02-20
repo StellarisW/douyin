@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"strconv"
 	"sync"
 	"time"
@@ -24,7 +25,7 @@ type (
 		Relation(ctx context.Context, srcUserId, dstUserId int64, actionType uint32) errx.Error
 		GetFollowList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error)
 		GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error)
-		GetFriendList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error)
+		GetFriendList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.FriendProfile, errx.Error)
 	}
 	DefaultModel struct {
 		db  *gorm.DB
@@ -532,7 +533,7 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 	return profiles, nil
 }
 
-func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
+func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.FriendProfile, errx.Error) {
 	ids, err := m.rdb.ZInter(ctx, &redis.ZStore{
 		Keys: []string{
 			fmt.Sprintf("%s%d", user.RdbKeyFollow, dstUserId),
@@ -560,7 +561,7 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 		interIds = append(interIds, "")
 	}
 
-	profiles := make([]*pb.Profile, len(ids))
+	friendProfiles := make([]*pb.FriendProfile, len(ids))
 
 	size := len(ids)
 
@@ -595,7 +596,8 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 				wg.Done()
 			}()
 
-			var followCnt, followerCnt, totalFavorited, workCnt, favoriteCnt int64
+			var followCnt, followerCnt, totalFavorited, workCnt, favoriteCnt, msgType int64
+			var message string
 			var erx errx.Error
 
 			wg.Add(1)
@@ -705,6 +707,44 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 				wg.Done()
 			}()
 
+			wg.Add(1)
+			go func() {
+				var messageSubject entity.ChatMessage
+				id, _ := strconv.Atoi(id)
+
+				err := m.db.WithContext(ctx).
+					Table(entity.TableNameChatMessage).
+					Where("(`src_user_id` = ? AND `dst_user_id` = ?) OR (`src_user_id` = ? AND `dst_user_id` = ?)", dstUserId, id, id, dstUserId).
+					Order(clause.OrderByColumn{
+						Column: clause.Column{Name: "update_time"},
+						Desc:   true,
+					}).Limit(1).
+					Take(&messageSubject).
+					Error
+				if err != nil && err != gorm.ErrRecordNotFound {
+					log.Logger.Error(errx.MysqlGet, zap.Error(err))
+					erx = errMysqlGet
+					return
+				}
+
+				if messageSubject.ID != 0 {
+					if messageSubject.SrcUserID == dstUserId &&
+						messageSubject.DstUserID == int64(id) {
+						msgType = 1
+					} else if messageSubject.SrcUserID == int64(id) &&
+						messageSubject.DstUserID == dstUserId {
+						msgType = 0
+					} else {
+						log.Logger.Error(errx.MysqlGet, zap.Error(err))
+						erx = errMysqlGet
+						return
+					}
+					message = messageSubject.Content
+				}
+
+				wg.Done()
+			}()
+
 			wg.Wait()
 
 			if err != nil {
@@ -716,7 +756,7 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 				return erx
 			}
 
-			profiles[i] = &pb.Profile{
+			friendProfiles[i] = &pb.FriendProfile{
 				Id:              cast.ToInt64(id),
 				Name:            username,
 				FollowCount:     followCnt,
@@ -728,6 +768,8 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 				TotalFavorited:  totalFavorited,
 				WorkCount:       workCnt,
 				FavoriteCount:   favoriteCnt,
+				Message:         message,
+				MsgType:         msgType,
 			}
 
 			return nil
@@ -738,5 +780,5 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 		return nil, errx.New(errx.GetCode(err), err.Error())
 	}
 
-	return profiles, nil
+	return friendProfiles, nil
 }

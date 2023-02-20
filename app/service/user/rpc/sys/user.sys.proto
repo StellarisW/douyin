@@ -18,6 +18,22 @@ message Profile{
     int64 favorite_count=11; // 喜欢总数
 }
 
+message FriendProfile {
+    int64 id=1; // 用户id
+    string name=2; // 用户名称
+    int64 follow_count=3; // 关注总数
+    int64 follower_count=4; // 粉丝总数
+    bool is_follow=5; // true-已关注，false-未关注
+    string avatar=6; // 头像
+    string background_image=7; // 背景大图
+    string signature=8; //简介
+    int64 total_favorited=9; // 获赞总数
+    int64 work_count=10; // 作品总数
+    int64 favorite_count=11; // 喜欢总数
+    string message=12; // 最新聊天消息
+    int64 msg_type=13; // 消息类型，0-当前请求用户接收的消息， 1-当前请求用户发送的消息
+}
+
 message RegisterReq {
     string username = 1;
     string password = 2;
@@ -87,7 +103,7 @@ message GetFriendListReq{
 message GetFriendListRes{
     uint32 status_code = 1;
     string status_msg = 2;
-    repeated Profile user_list=3;
+    repeated FriendProfile user_list=3;
 }
 
 service Sys {
