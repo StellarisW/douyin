@@ -40,7 +40,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config: c,
 
-		CrudModel: crud.NewModel(idGenerator, db, rdb),
+		CrudModel: crud.NewModel(idGenerator, db, rdb, userSysRpcClient),
 		InfoModel: info.NewModel(db, rdb, userSysRpcClient),
 	}
 }

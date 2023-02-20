@@ -21,6 +21,8 @@ const (
 	ErrIdRedisPipeExec
 	ErrIdInvalidActionType
 	ErrIdMysqlDelete
+	ErrIdRequestRpcRes
+	ErrIdRequestRpcReceive
 	ErrIdCommon
 )
 

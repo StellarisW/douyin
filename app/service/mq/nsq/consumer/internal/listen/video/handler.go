@@ -50,7 +50,7 @@ func (m *CommentHandler) HandleMessage(nsqMsg *nsq.Message) error {
 		return fmt.Errorf("%s, err: %v", errx.JsonUnmarshal, err)
 	}
 
-	rpcRes, _ := m.VideoSysRpcClient.Comment(context.Background(), &pb.CommentReq{
+	rpcRes, _ := m.VideoSysRpcClient.ManageComment(context.Background(), &pb.ManageCommentReq{
 		UserId:      msg.UserId,
 		VideoId:     msg.VideoId,
 		ActionType:  msg.ActionType,

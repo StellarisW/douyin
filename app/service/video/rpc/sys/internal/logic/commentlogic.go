@@ -29,22 +29,8 @@ func NewCommentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CommentLo
 }
 
 func (l *CommentLogic) Comment(in *pb.CommentReq) (*pb.CommentRes, error) {
-	erx := l.svcCtx.CrudModel.Comment(l.ctx, in.UserId, in.VideoId, in.ActionType, in.CommentText, in.CommentId)
+	comment, erx := l.svcCtx.CrudModel.Comment(l.ctx, in.UserId, in.VideoId, in.CommentText, in.CreateDate)
 	if erx != nil {
-		if erx.Code() == crud.ErrIdInvalidActionType {
-			return &pb.CommentRes{
-				StatusCode: errx.Encode(
-					errx.Logic,
-					sys.SysId,
-					douyin.Rpc,
-					sys.ServiceIdRpcSys,
-					consts.ErrIdLogicCrud,
-					crud.ErrIdOprComment,
-					crud.ErrIdInvalidActionType,
-				),
-				StatusMsg: crud.ErrInvalidContentType,
-			}, nil
-		}
 		return &pb.CommentRes{
 			StatusCode: errx.Encode(
 				errx.Sys,
@@ -62,5 +48,6 @@ func (l *CommentLogic) Comment(in *pb.CommentReq) (*pb.CommentRes, error) {
 	return &pb.CommentRes{
 		StatusCode: 0,
 		StatusMsg:  "comment successfully",
+		Comment:    comment,
 	}, nil
 }

@@ -72,6 +72,14 @@ func (s *SysServer) Comment(ctx context.Context, in *pb.CommentReq) (*pb.Comment
 	return res, err
 }
 
+func (s *SysServer) ManageComment(ctx context.Context, in *pb.ManageCommentReq) (*pb.ManageCommentRes, error) {
+	log.Logger.Debug("recv:", zap.String("msg", in.String()))
+	l := logic.NewManageCommentLogic(ctx, s.svcCtx)
+	res, err := l.ManageComment(in)
+	log.Logger.Debug("send:", zap.String("msg", res.String()))
+	return res, err
+}
+
 func (s *SysServer) GetCommentList(ctx context.Context, in *pb.GetCommentListReq) (*pb.GetCommentListRes, error) {
 	log.Logger.Debug("recv:", zap.String("msg", in.String()))
 	l := logic.NewGetCommentListLogic(ctx, s.svcCtx)

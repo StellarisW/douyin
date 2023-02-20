@@ -5,8 +5,11 @@ import (
 	"douyin/app/common/douyin"
 	"douyin/app/common/errx"
 	"douyin/app/common/log"
+	userpb "douyin/app/service/user/rpc/sys/pb"
+	usersys "douyin/app/service/user/rpc/sys/sys"
 	"douyin/app/service/video/internal/video"
 	"douyin/app/service/video/rpc/sys/internal/model/dao/entity"
+	"douyin/app/service/video/rpc/sys/pb"
 	"fmt"
 	"github.com/go-redis/redis/v9"
 	"github.com/yitter/idgenerator-go/idgen"
@@ -20,20 +23,23 @@ type (
 	Model interface {
 		Publish(ctx context.Context, userId int64, title string) (int64, errx.Error)
 		Favorite(ctx context.Context, userId, videoId int64, actionType uint32) errx.Error
-		Comment(ctx context.Context, userId, videoId int64, actionType uint32, commentText string, commentId int64) errx.Error
+		Comment(ctx context.Context, userId, videoId int64, commentText, createDate string) (*pb.Comment, errx.Error)
+		ManageComment(ctx context.Context, userId, videoId int64, actionType uint32, commentText string, commentId int64) errx.Error
 	}
 	DefaultModel struct {
-		idGenerator *idgen.DefaultIdGenerator
-		db          *gorm.DB
-		rdb         *redis.ClusterClient
+		idGenerator      *idgen.DefaultIdGenerator
+		db               *gorm.DB
+		rdb              *redis.ClusterClient
+		userSysRpcClient usersys.Sys
 	}
 )
 
-func NewModel(idGenerator *idgen.DefaultIdGenerator, db *gorm.DB, rdb *redis.ClusterClient) *DefaultModel {
+func NewModel(idGenerator *idgen.DefaultIdGenerator, db *gorm.DB, rdb *redis.ClusterClient, userSysRpcClient usersys.Sys) *DefaultModel {
 	return &DefaultModel{
-		idGenerator: idGenerator,
-		db:          db,
-		rdb:         rdb,
+		idGenerator:      idGenerator,
+		db:               db,
+		rdb:              rdb,
+		userSysRpcClient: userSysRpcClient,
 	}
 }
 
@@ -157,7 +163,43 @@ func (m *DefaultModel) Favorite(ctx context.Context, userId, videoId int64, acti
 	}
 }
 
-func (m *DefaultModel) Comment(ctx context.Context, userId, videoId int64, actionType uint32, commentText string, commentId int64) errx.Error {
+func (m *DefaultModel) Comment(ctx context.Context, userId, videoId int64, commentText, createDate string) (*pb.Comment, errx.Error) {
+	commentId := m.idGenerator.NewLong()
+
+	rpcRes, _ := m.userSysRpcClient.GetProfile(ctx, &userpb.GetProfileReq{
+		SrcUserId: userId,
+		DstUserId: userId,
+	})
+	if rpcRes == nil {
+		log.Logger.Error(errx.RequestRpcReceive)
+		return nil, errRequestRpcReceive
+	}
+	if rpcRes.StatusCode != 0 {
+		log.Logger.Error(errx.RequestRpcRes)
+		return nil, errRequestRpcRes
+	}
+
+	return &pb.Comment{
+		Id: commentId,
+		User: &pb.Profile{
+			Id:              rpcRes.User.Id,
+			Name:            rpcRes.User.Name,
+			FollowCount:     rpcRes.User.FollowCount,
+			FollowerCount:   rpcRes.User.FollowerCount,
+			IsFollow:        rpcRes.User.IsFollow,
+			Avatar:          rpcRes.User.Avatar,
+			BackgroundImage: rpcRes.User.BackgroundImage,
+			Signature:       rpcRes.User.Signature,
+			TotalFavorited:  rpcRes.User.TotalFavorited,
+			WorkCount:       rpcRes.User.WorkCount,
+			FavoriteCount:   rpcRes.User.FavoriteCount,
+		},
+		Content:    commentText,
+		CreateDate: createDate,
+	}, nil
+}
+
+func (m *DefaultModel) ManageComment(ctx context.Context, userId, videoId int64, actionType uint32, commentText string, commentId int64) errx.Error {
 	switch actionType {
 	case 1:
 		// 发布评论

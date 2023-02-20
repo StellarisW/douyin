@@ -11,6 +11,7 @@ import (
 	"douyin/app/service/video/api/internal/consts"
 	"douyin/app/service/video/api/internal/consts/crud"
 	"douyin/app/service/video/internal/sys"
+	"douyin/app/service/video/rpc/sys/pb"
 	"fmt"
 	"go.uber.org/zap"
 	"strconv"
@@ -84,8 +85,6 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		}, nil
 	}
 
-	_, m, d := time.Now().Date()
-
 	var videoId, commentId int64
 	var commentContent string
 
@@ -105,9 +104,43 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		}, nil
 	}
 
+	_, m, d := time.Now().Date()
+	createDate := fmt.Sprintf("%02d-%02d", m, d)
+
+	var comment *pb.Comment
+
 	if actionType == 1 {
-		commentId = l.svcCtx.IdGenerator.NewLong()
 		commentContent = l.svcCtx.Filter.GetFilter().Replace(req.CommentText, '*')
+
+		rpcRes, _ := l.svcCtx.SysRpcClient.Comment(l.ctx, &pb.CommentReq{
+			UserId:      userId,
+			VideoId:     videoId,
+			CommentText: commentContent,
+			CreateDate:  createDate,
+		})
+		if rpcRes == nil {
+			log.Logger.Error(errx.RequestRpcReceive)
+			return &types.CommentRes{
+				StatusCode: errx.Encode(
+					errx.Logic,
+					sys.SysId,
+					douyin.Api,
+					sys.ServiceIdApi,
+					consts.ErrIdLogicCrud,
+					crud.ErrIdOprComment,
+					crud.ErrIdRequestRpcReceiveSys,
+				),
+				StatusMsg: errx.Internal,
+			}, nil
+		} else if rpcRes.StatusCode != 0 {
+			return &types.CommentRes{
+				StatusCode: rpcRes.StatusCode,
+				StatusMsg:  rpcRes.StatusMsg,
+			}, nil
+		}
+
+		comment = rpcRes.Comment
+		commentId = comment.Id
 	}
 	if actionType == 2 {
 		commentId, err = strconv.ParseInt(req.CommentId, 10, 64)
@@ -171,21 +204,7 @@ func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentRes, e
 		return &types.CommentRes{
 			StatusCode: 0,
 			StatusMsg:  "comment successfully",
-			Comment: &types.Comment{
-				Id: commentId,
-				User: &types.Profile{
-					Id:             userId,
-					Name:           "user",
-					FollowCount:    0,
-					FollowerCount:  0,
-					IsFollow:       false,
-					TotalFavorited: 0,
-					WorkCount:      0,
-					FavoriteCount:  0,
-				},
-				Content:    commentContent,
-				CreateDate: fmt.Sprintf("%02d-%02d", m, d),
-			},
+			Comment:    comment,
 		}, nil
 	}
 	if actionType == 2 {

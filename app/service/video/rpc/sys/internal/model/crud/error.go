@@ -15,6 +15,8 @@ var (
 	errRedisPipeExec     = errx.New(ErrIdRedisPipeExec, errx.RedisPipeExec)
 	errInvalidActionType = errx.New(ErrIdInvalidActionType, ErrInvalidActionType)
 	errMysqlDelete       = errx.New(ErrIdMysqlDelete, errx.MysqlDelete)
+	errRequestRpcRes     = errx.New(ErrIdRequestRpcRes, errx.RequestRpcRes)
+	errRequestRpcReceive = errx.New(ErrIdRequestRpcReceive, errx.RequestRpcReceive)
 )
 
 var (
