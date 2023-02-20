@@ -34,8 +34,7 @@ func (l *GetMessageLogic) GetMessage(in *pb.GetMessageReq) (*pb.GetMessageRes, e
 	chatMessages := make([]*entity.ChatMessage, 0)
 
 	err := l.svcCtx.Db.WithContext(l.ctx).
-		Select("`id`, `content`, `create_time`").
-		Where("`src_user_id` = ? AND `dst_user_id` = ?", in.DstUserId, in.SrcUserId).
+		Where("(`src_user_id` = ? AND `dst_user_id` = ?) OR (`src_user_id` = ? AND `dst_user_id` = ?)", in.DstUserId, in.SrcUserId, in.SrcUserId, in.DstUserId).
 		Find(&chatMessages).
 		Error
 	if err != nil {
@@ -59,8 +58,8 @@ func (l *GetMessageLogic) GetMessage(in *pb.GetMessageReq) (*pb.GetMessageRes, e
 	for _, message := range chatMessages {
 		messages = append(messages, &pb.Message{
 			Id:         message.ID,
-			ToUserId:   in.DstUserId,
-			FromUserId: in.SrcUserId,
+			ToUserId:   message.DstUserID,
+			FromUserId: message.SrcUserID,
 			Content:    message.Content,
 			CreateTime: message.CreateTime.Unix(),
 		})
