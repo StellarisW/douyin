@@ -10,11 +10,12 @@ import (
 	"douyin/app/service/user/rpc/sys/pb"
 	"fmt"
 	"github.com/go-redis/redis/v9"
-	"github.com/zeromicro/go-zero/core/mr"
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -154,13 +155,167 @@ func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId i
 
 	eg := new(errgroup.Group)
 
+	interIndex := 0
 	for i := 0; i < size; i++ {
 		i := i
+		id := ids[i]
+
+		var isFollow bool
+
+		if ids[i] == interIds[interIndex] {
+			isFollow = true
+			interIndex++
+		}
 
 		eg.Go(func() error {
-			profiles[i], err = m.getProfile(ctx, srcUserId, dstUserId)
+			wg := sync.WaitGroup{}
+
+			var username string
+
+			wg.Add(1)
+			go func() {
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameUserSubject).
+					Select("`username`").
+					Where("`id` = ?", id).
+					Take(&username).
+					Error
+
+				wg.Done()
+			}()
+
+			var followCnt, followerCnt, totalFavorited, workCnt, favoriteCnt int64
+			var erx errx.Error
+
+			wg.Add(1)
+			go func() {
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.ZCard(ctx, user.RdbKeyFollow+id)
+					pipe.ZCard(ctx, user.RdbKeyFollower+id)
+					pipe.ZCard(ctx, video.RdbKeyFavorite+id)
+
+					return nil
+				})
+				if err != nil {
+					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+					erx = errRedisPipeExec
+					return
+				}
+
+				followCnt, err = cmds[0].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				followerCnt, err = cmds[1].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+				favoriteCnt, err = cmds[2].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				wg.Done()
+			}()
+
+			wg.Add(1)
+			go func() {
+				var err error
+				err = m.db.WithContext(ctx).
+					Model(&entity.VideoSubject{}).
+					Where("`user_id` = ?", id).
+					Count(&workCnt).Error
+				if err != nil {
+					if err != gorm.ErrRecordNotFound {
+						log.Logger.Error(errx.MysqlGet, zap.Error(err))
+						erx = errMysqlGet
+						return
+					}
+					workCnt = 0
+				}
+
+				wg.Done()
+			}()
+
+			wg.Add(1)
+			go func() {
+				var err error
+				videoSubjects := make([]*entity.VideoSubject, 0)
+
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameVideoSubject).
+					Select("`id`").
+					Where("`user_id` = ?", id).
+					Find(&videoSubjects).Error
+				if err != nil {
+					log.Logger.Error(errx.MysqlGet, zap.Error(err))
+					erx = errMysqlGet
+					return
+				}
+
+				size := len(videoSubjects)
+
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					for i := 0; i < size; i++ {
+						pipe.Get(ctx,
+							fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
+						)
+					}
+					return nil
+				})
+				if err != nil {
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+						erx = errRedisPipeExec
+						return
+					}
+				}
+
+				for i := 0; i < size; i++ {
+					value, err := cmds[i].(*redis.StringCmd).Int64()
+					if err != nil {
+						if err != redis.Nil {
+							log.Logger.Error(errx.RedisGet, zap.Error(err))
+							erx = errRedisGet
+							return
+						}
+					}
+					totalFavorited += value
+				}
+
+				wg.Done()
+			}()
+
+			wg.Wait()
+
 			if err != nil {
-				return errRedisGet
+				log.Logger.Error(errx.MysqlGet, zap.Error(err))
+				return errMysqlGet
+			}
+
+			if erx != nil {
+				return erx
+			}
+
+			profiles[i] = &pb.Profile{
+				Id:              cast.ToInt64(id),
+				Name:            username,
+				FollowCount:     followCnt,
+				FollowerCount:   followerCnt,
+				IsFollow:        isFollow,
+				Avatar:          "",
+				BackgroundImage: "",
+				Signature:       "",
+				TotalFavorited:  totalFavorited,
+				WorkCount:       workCnt,
+				FavoriteCount:   favoriteCnt,
 			}
 
 			return nil
@@ -202,13 +357,168 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 
 	eg := new(errgroup.Group)
 
+	interIndex := 0
 	for i := 0; i < size; i++ {
 		i := i
+		id := ids[i]
+
+		var isFollow bool
+
+		if ids[i] == interIds[interIndex] {
+			isFollow = true
+			interIndex++
+		}
 
 		eg.Go(func() error {
-			profiles[i], err = m.getProfile(ctx, srcUserId, dstUserId)
+			wg := sync.WaitGroup{}
+
+			var username string
+
+			wg.Add(1)
+			go func() {
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameUserSubject).
+					Select("`username`").
+					Where("`id` = ?", id).
+					Take(&username).
+					Error
+
+				wg.Done()
+			}()
+
+			var followCnt, followerCnt, totalFavorited, workCnt, favoriteCnt int64
+			var erx errx.Error
+
+			wg.Add(1)
+			go func() {
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.ZCard(ctx, user.RdbKeyFollow+id)
+					pipe.ZCard(ctx, user.RdbKeyFollower+id)
+					pipe.ZCard(ctx, video.RdbKeyFavorite+id)
+
+					return nil
+				})
+				if err != nil {
+					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+					erx = errRedisPipeExec
+					return
+				}
+
+				followCnt, err = cmds[0].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				followerCnt, err = cmds[1].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				favoriteCnt, err = cmds[2].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				wg.Done()
+			}()
+
+			wg.Add(1)
+			go func() {
+				var err error
+				err = m.db.WithContext(ctx).
+					Model(&entity.VideoSubject{}).
+					Where("`user_id` = ?", id).
+					Count(&workCnt).Error
+				if err != nil {
+					if err != gorm.ErrRecordNotFound {
+						log.Logger.Error(errx.MysqlGet, zap.Error(err))
+						erx = errMysqlGet
+						return
+					}
+					workCnt = 0
+				}
+
+				wg.Done()
+			}()
+
+			wg.Add(1)
+			go func() {
+				var err error
+				videoSubjects := make([]*entity.VideoSubject, 0)
+
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameVideoSubject).
+					Select("`id`").
+					Where("`user_id` = ?", id).
+					Find(&videoSubjects).Error
+				if err != nil {
+					log.Logger.Error(errx.MysqlGet, zap.Error(err))
+					erx = errMysqlGet
+					return
+				}
+
+				size := len(videoSubjects)
+
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					for i := 0; i < size; i++ {
+						pipe.Get(ctx,
+							fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
+						)
+					}
+					return nil
+				})
+				if err != nil {
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+						erx = errRedisPipeExec
+						return
+					}
+				}
+
+				for i := 0; i < size; i++ {
+					value, err := cmds[i].(*redis.StringCmd).Int64()
+					if err != nil {
+						if err != redis.Nil {
+							log.Logger.Error(errx.RedisGet, zap.Error(err))
+							erx = errRedisGet
+							return
+						}
+					}
+					totalFavorited += value
+				}
+
+				wg.Done()
+			}()
+
+			wg.Wait()
+
 			if err != nil {
-				return errRedisGet
+				log.Logger.Error(errx.MysqlGet, zap.Error(err))
+				return errMysqlGet
+			}
+
+			if erx != nil {
+				return erx
+			}
+
+			profiles[i] = &pb.Profile{
+				Id:              cast.ToInt64(id),
+				Name:            username,
+				FollowCount:     followCnt,
+				FollowerCount:   followerCnt,
+				IsFollow:        isFollow,
+				Avatar:          "",
+				BackgroundImage: "",
+				Signature:       "",
+				TotalFavorited:  totalFavorited,
+				WorkCount:       workCnt,
+				FavoriteCount:   favoriteCnt,
 			}
 
 			return nil
@@ -256,13 +566,168 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 
 	eg := new(errgroup.Group)
 
+	interIndex := 0
 	for i := 0; i < size; i++ {
 		i := i
+		id := ids[i]
+
+		var isFollow bool
+
+		if ids[i] == interIds[interIndex] {
+			isFollow = true
+			interIndex++
+		}
 
 		eg.Go(func() error {
-			profiles[i], err = m.getProfile(ctx, srcUserId, dstUserId)
+			wg := sync.WaitGroup{}
+
+			var username string
+
+			wg.Add(1)
+			go func() {
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameUserSubject).
+					Select("`username`").
+					Where("`id` = ?", id).
+					Take(&username).
+					Error
+
+				wg.Done()
+			}()
+
+			var followCnt, followerCnt, totalFavorited, workCnt, favoriteCnt int64
+			var erx errx.Error
+
+			wg.Add(1)
+			go func() {
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.ZCard(ctx, user.RdbKeyFollow+id)
+					pipe.ZCard(ctx, user.RdbKeyFollower+id)
+					pipe.ZCard(ctx, video.RdbKeyFavorite+id)
+
+					return nil
+				})
+				if err != nil {
+					log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+					erx = errRedisPipeExec
+					return
+				}
+
+				followCnt, err = cmds[0].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				followerCnt, err = cmds[1].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				favoriteCnt, err = cmds[2].(*redis.IntCmd).Result()
+				if err != nil {
+					log.Logger.Error(errx.RedisGet, zap.Error(err))
+					erx = errRedisGet
+					return
+				}
+
+				wg.Done()
+			}()
+
+			wg.Add(1)
+			go func() {
+				var err error
+				err = m.db.WithContext(ctx).
+					Model(&entity.VideoSubject{}).
+					Where("`user_id` = ?", id).
+					Count(&workCnt).Error
+				if err != nil {
+					if err != gorm.ErrRecordNotFound {
+						log.Logger.Error(errx.MysqlGet, zap.Error(err))
+						erx = errMysqlGet
+						return
+					}
+					workCnt = 0
+				}
+
+				wg.Done()
+			}()
+
+			wg.Add(1)
+			go func() {
+				var err error
+				videoSubjects := make([]*entity.VideoSubject, 0)
+
+				err = m.db.WithContext(ctx).
+					Table(entity.TableNameVideoSubject).
+					Select("`id`").
+					Where("`user_id` = ?", id).
+					Find(&videoSubjects).Error
+				if err != nil {
+					log.Logger.Error(errx.MysqlGet, zap.Error(err))
+					erx = errMysqlGet
+					return
+				}
+
+				size := len(videoSubjects)
+
+				cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					for i := 0; i < size; i++ {
+						pipe.Get(ctx,
+							fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
+						)
+					}
+					return nil
+				})
+				if err != nil {
+					if err != redis.Nil {
+						log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
+						erx = errRedisPipeExec
+						return
+					}
+				}
+
+				for i := 0; i < size; i++ {
+					value, err := cmds[i].(*redis.StringCmd).Int64()
+					if err != nil {
+						if err != redis.Nil {
+							log.Logger.Error(errx.RedisGet, zap.Error(err))
+							erx = errRedisGet
+							return
+						}
+					}
+					totalFavorited += value
+				}
+
+				wg.Done()
+			}()
+
+			wg.Wait()
+
 			if err != nil {
-				return errRedisGet
+				log.Logger.Error(errx.MysqlGet, zap.Error(err))
+				return errMysqlGet
+			}
+
+			if erx != nil {
+				return erx
+			}
+
+			profiles[i] = &pb.Profile{
+				Id:              cast.ToInt64(id),
+				Name:            username,
+				FollowCount:     followCnt,
+				FollowerCount:   followerCnt,
+				IsFollow:        isFollow,
+				Avatar:          "",
+				BackgroundImage: "",
+				Signature:       "",
+				TotalFavorited:  totalFavorited,
+				WorkCount:       workCnt,
+				FavoriteCount:   favoriteCnt,
 			}
 
 			return nil
@@ -274,144 +739,4 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 	}
 
 	return profiles, nil
-}
-
-func (m *DefaultModel) getProfile(ctx context.Context, srcUserId, dstUserId int64) (*pb.Profile, errx.Error) {
-	userSubject := &entity.UserSubject{}
-	var followCnt, followerCnt, totalFavorited, workCnt, favoriteCnt int64
-	var isFollow bool
-
-	err := mr.Finish(func() error {
-		err := m.db.WithContext(ctx).
-			Select("`id`, `username`").
-			Where("`id` = ?", dstUserId).
-			Take(userSubject).
-			Error
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return errUserNotFound
-			}
-			log.Logger.Error(errx.MysqlGet, zap.Error(err))
-			return errMysqlGet
-		}
-
-		return nil
-	}, func() error {
-		var err error
-		followCnt, err = m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, dstUserId)).Result()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return errRedisGet
-		}
-
-		return nil
-	}, func() error {
-		var err error
-		followerCnt, err = m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId)).Result()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return errRedisGet
-		}
-
-		return nil
-	}, func() error {
-		var err error
-		_, err = m.rdb.ZRank(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollow, srcUserId), strconv.FormatInt(dstUserId, 10)).Result()
-		if err != nil {
-			if err != redis.Nil {
-				log.Logger.Error(errx.RedisGet, zap.Error(err))
-				return errRedisGet
-			}
-		} else {
-			isFollow = true
-		}
-
-		return nil
-	}, func() error {
-		var err error
-		videoSubjects := make([]*entity.VideoSubject, 0)
-
-		err = m.db.WithContext(ctx).
-			Table(entity.TableNameVideoSubject).
-			Select("`id`").
-			Where("`user_id` = ?", dstUserId).
-			Find(&videoSubjects).Error
-		if err != nil {
-			log.Logger.Error(errx.MysqlGet, zap.Error(err))
-			return errMysqlGet
-		}
-
-		size := len(videoSubjects)
-
-		cmds, err := m.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
-			for i := 0; i < size; i++ {
-				pipe.Get(ctx,
-					fmt.Sprintf("%s%d", video.RdbKeyFavoriteCnt, videoSubjects[i].ID),
-				)
-			}
-			return nil
-		})
-		if err != nil {
-			if err != redis.Nil {
-				log.Logger.Error(errx.RedisPipeExec, zap.Error(err))
-				return errRedisPipeExec
-			}
-		}
-
-		for i := 0; i < size; i++ {
-			value, err := cmds[i].(*redis.StringCmd).Int64()
-			if err != nil {
-				if err != redis.Nil {
-					log.Logger.Error(errx.RedisGet, zap.Error(err))
-					return errRedisGet
-				}
-			}
-			totalFavorited += value
-		}
-
-		return nil
-	}, func() error {
-		var err error
-		err = m.db.WithContext(ctx).
-			Model(&entity.VideoSubject{}).
-			Where("`user_id` = ?", dstUserId).
-			Count(&workCnt).Error
-		if err != nil {
-			if err != gorm.ErrRecordNotFound {
-				log.Logger.Error(errx.MysqlGet, zap.Error(err))
-				return errMysqlGet
-			}
-			workCnt = 0
-		}
-
-		return nil
-	}, func() error {
-		var err error
-		favoriteCnt, err = m.rdb.ZCard(ctx, fmt.Sprintf("%s%d", video.RdbKeyFavorite, dstUserId)).Result()
-		if err != nil {
-			log.Logger.Error(errx.RedisGet, zap.Error(err))
-			return errRedisGet
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, errx.New(errx.GetCode(err), err.Error())
-	}
-
-	profile := &pb.Profile{
-		Id:              userSubject.ID,
-		Name:            userSubject.Username,
-		FollowCount:     followCnt,
-		FollowerCount:   followerCnt,
-		IsFollow:        isFollow,
-		Avatar:          "",
-		BackgroundImage: "",
-		Signature:       "",
-		TotalFavorited:  totalFavorited,
-		WorkCount:       workCnt,
-		FavoriteCount:   favoriteCnt,
-	}
-
-	return profile, nil
 }
