@@ -29,7 +29,7 @@ type Message struct {
 	ToUserId   int64  `protobuf:"varint,2,opt,name=to_user_id,json=toUserId,proto3" json:"to_user_id"`       // 消息接收者id
 	FromUserId int64  `protobuf:"varint,3,opt,name=from_user_id,json=fromUserId,proto3" json:"from_user_id"` // 消息发送者id
 	Content    string `protobuf:"bytes,4,opt,name=content,proto3" json:"content"`                            // 消息内容
-	CreateTime string `protobuf:"bytes,5,opt,name=create_time,json=createTime,proto3" json:"create_time"`    // 消息创建时间
+	CreateTime int64  `protobuf:"bytes,5,opt,name=create_time,json=createTime,proto3" json:"create_time"`    // 消息创建时间
 }
 
 func (x *Message) Reset() {
@@ -92,11 +92,11 @@ func (x *Message) GetContent() string {
 	return ""
 }
 
-func (x *Message) GetCreateTime() string {
+func (x *Message) GetCreateTime() int64 {
 	if x != nil {
 		return x.CreateTime
 	}
-	return ""
+	return 0
 }
 
 type SendMessageReq struct {
