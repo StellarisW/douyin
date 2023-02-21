@@ -363,13 +363,6 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 		i := i
 		id := ids[i]
 
-		var isFollow bool
-
-		if ids[i] == interIds[interIndex] {
-			isFollow = true
-			interIndex++
-		}
-
 		eg.Go(func() error {
 			wg := sync.WaitGroup{}
 
@@ -508,18 +501,35 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 				return erx
 			}
 
-			profiles[i] = &pb.Profile{
-				Id:              cast.ToInt64(id),
-				Name:            username,
-				FollowCount:     followCnt,
-				FollowerCount:   followerCnt,
-				IsFollow:        isFollow,
-				Avatar:          "",
-				BackgroundImage: "",
-				Signature:       "",
-				TotalFavorited:  totalFavorited,
-				WorkCount:       workCnt,
-				FavoriteCount:   favoriteCnt,
+			if id == interIds[interIndex] {
+				profiles[i] = &pb.Profile{
+					Id:              cast.ToInt64(id),
+					Name:            username,
+					FollowCount:     followCnt,
+					FollowerCount:   followerCnt,
+					IsFollow:        true,
+					Avatar:          "",
+					BackgroundImage: "",
+					Signature:       "",
+					TotalFavorited:  totalFavorited,
+					WorkCount:       workCnt,
+					FavoriteCount:   favoriteCnt,
+				}
+				interIndex++
+			} else {
+				profiles[i] = &pb.Profile{
+					Id:              cast.ToInt64(id),
+					Name:            username,
+					FollowCount:     followCnt,
+					FollowerCount:   followerCnt,
+					IsFollow:        false,
+					Avatar:          "",
+					BackgroundImage: "",
+					Signature:       "",
+					TotalFavorited:  totalFavorited,
+					WorkCount:       workCnt,
+					FavoriteCount:   favoriteCnt,
+				}
 			}
 
 			return nil
