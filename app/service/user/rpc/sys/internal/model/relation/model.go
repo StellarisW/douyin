@@ -335,7 +335,7 @@ func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId i
 }
 
 func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
-	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, srcUserId), 0, -1).Result()
+	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId), 0, -1).Result()
 	if err != nil {
 		log.Logger.Error(errx.RedisRange, zap.Error(err))
 		return nil, errRedisRange
