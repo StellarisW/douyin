@@ -6,6 +6,7 @@ require (
 	github.com/StellarisW/go-sensitive v1.0.1
 	github.com/alibaba/sentinel-golang v1.0.4
 	github.com/apolloconfig/agollo/v4 v4.3.0
+	github.com/deckarep/golang-set/v2 v2.1.0
 	github.com/dlclark/regexp2 v1.8.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/gorilla/websocket v1.4.2

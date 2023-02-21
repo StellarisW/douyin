@@ -9,6 +9,7 @@ import (
 	"douyin/app/service/user/rpc/sys/internal/model/dao/entity"
 	"douyin/app/service/user/rpc/sys/pb"
 	"fmt"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/go-redis/redis/v9"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
@@ -150,22 +151,25 @@ func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId i
 		interIds = append(interIds, "")
 	}
 
+	s := mapset.NewSet[string]()
+	for _, interId := range interIds {
+		s.Add(interId)
+	}
+
 	profiles := make([]*pb.Profile, len(ids))
 
 	size := len(ids)
 
 	eg := new(errgroup.Group)
 
-	interIndex := 0
 	for i := 0; i < size; i++ {
 		i := i
 		id := ids[i]
 
 		var isFollow bool
 
-		if ids[i] == interIds[interIndex] {
+		if s.Contains(ids[i]) {
 			isFollow = true
-			interIndex++
 		}
 
 		eg.Go(func() error {
@@ -331,7 +335,7 @@ func (m *DefaultModel) GetFollowList(ctx context.Context, srcUserId, dstUserId i
 }
 
 func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId int64) ([]*pb.Profile, errx.Error) {
-	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, dstUserId), 0, -1).Result()
+	ids, err := m.rdb.ZRange(ctx, fmt.Sprintf("%s%d", user.RdbKeyFollower, srcUserId), 0, -1).Result()
 	if err != nil {
 		log.Logger.Error(errx.RedisRange, zap.Error(err))
 		return nil, errRedisRange
@@ -352,16 +356,26 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 		interIds = append(interIds, "")
 	}
 
+	s := mapset.NewSet[string]()
+	for _, interId := range interIds {
+		s.Add(interId)
+	}
+
 	profiles := make([]*pb.Profile, len(ids))
 
 	size := len(ids)
 
 	eg := new(errgroup.Group)
 
-	interIndex := 0
 	for i := 0; i < size; i++ {
 		i := i
 		id := ids[i]
+
+		var isFollow bool
+
+		if s.Contains(ids[i]) {
+			isFollow = true
+		}
 
 		eg.Go(func() error {
 			wg := sync.WaitGroup{}
@@ -501,35 +515,18 @@ func (m *DefaultModel) GetFollowerList(ctx context.Context, srcUserId, dstUserId
 				return erx
 			}
 
-			if id == interIds[interIndex] {
-				profiles[i] = &pb.Profile{
-					Id:              cast.ToInt64(id),
-					Name:            username,
-					FollowCount:     followCnt,
-					FollowerCount:   followerCnt,
-					IsFollow:        true,
-					Avatar:          "",
-					BackgroundImage: "",
-					Signature:       "",
-					TotalFavorited:  totalFavorited,
-					WorkCount:       workCnt,
-					FavoriteCount:   favoriteCnt,
-				}
-				interIndex++
-			} else {
-				profiles[i] = &pb.Profile{
-					Id:              cast.ToInt64(id),
-					Name:            username,
-					FollowCount:     followCnt,
-					FollowerCount:   followerCnt,
-					IsFollow:        false,
-					Avatar:          "",
-					BackgroundImage: "",
-					Signature:       "",
-					TotalFavorited:  totalFavorited,
-					WorkCount:       workCnt,
-					FavoriteCount:   favoriteCnt,
-				}
+			profiles[i] = &pb.Profile{
+				Id:              cast.ToInt64(id),
+				Name:            username,
+				FollowCount:     followCnt,
+				FollowerCount:   followerCnt,
+				IsFollow:        isFollow,
+				Avatar:          "",
+				BackgroundImage: "",
+				Signature:       "",
+				TotalFavorited:  totalFavorited,
+				WorkCount:       workCnt,
+				FavoriteCount:   favoriteCnt,
 			}
 
 			return nil
@@ -571,22 +568,25 @@ func (m *DefaultModel) GetFriendList(ctx context.Context, srcUserId, dstUserId i
 		interIds = append(interIds, "")
 	}
 
+	s := mapset.NewSet[string]()
+	for _, interId := range interIds {
+		s.Add(interId)
+	}
+
 	friendProfiles := make([]*pb.FriendProfile, len(ids))
 
 	size := len(ids)
 
 	eg := new(errgroup.Group)
 
-	interIndex := 0
 	for i := 0; i < size; i++ {
 		i := i
 		id := ids[i]
 
 		var isFollow bool
 
-		if ids[i] == interIds[interIndex] {
+		if s.Contains(ids[i]) {
 			isFollow = true
-			interIndex++
 		}
 
 		eg.Go(func() error {
