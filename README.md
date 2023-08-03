@@ -225,7 +225,7 @@ go-zero框架集成了对jaeger的支持，因此使用jaeger做追踪系统
 
 ### 架构图
 
-[点击放大](./manifest/docs/image/architecture.svg)
+[点击放大](./manifest/docs/image/architecture.png)
 
 <img src="./manifest/docs/image/architecture.png">
 
@@ -564,6 +564,12 @@ const (
 - [StellarisW](https://github.com/StellarisW)
 
 - [Snluna](https://github.com/Snluna)
+
+## 🎖 获奖证书
+
+> 该项目荣获“超级码力奖”第一名
+
+<img src="./manifest/docs/image/award.jpg" width="40%">
 
 ## 🎗鸣谢
 
